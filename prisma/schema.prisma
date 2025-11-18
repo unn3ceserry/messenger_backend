@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(uuid())
+
+  email    String? @unique
+  number   BigInt  @unique
+  username String  @unique
+
+  avatars  String?
+  bio      String?
+  birthday DateTime?
+
+  firstName String
+  lastName  String
+
+  contacts     UserContacts[]
+  blockedUsers String[]       @default([])
+
+  // privacy
+  phoneVisible    WhoCanSeen @default(ALL)
+  emailVisible    WhoCanSeen @default(ALL)
+  bioVisible      WhoCanSeen @default(ALL)
+  avatarsVisible  WhoCanSeen @default(ALL)
+  birthdayVisible WhoCanSeen @default(ALL)
+
+  // security
+  cloudPassword String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model UserContacts {
+  id               String   @id @default(uuid())
+  username         String
+  user             User     @relation(fields: [username], references: [username])
+  usernameContact  String
+  firstNameContact String
+  lastNameContact  String
+  avatarsContact   String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contacts")
+}
+
+enum WhoCanSeen {
+  ALL
+  CONTACTS
+  I
+}

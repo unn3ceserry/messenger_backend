@@ -12,7 +12,7 @@ model User {
   id String @id @default(uuid())
 
   email    String? @unique
-  number   BigInt  @unique
+  number   String  @unique
   username String  @unique
 
   avatars  String?

@@ -31,7 +31,7 @@ async function bootstrap() {
         domain: config.getOrThrow<string>('DOMAIN'),
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        secure: true,
+        secure: config.getOrThrow<string>('NODE_ENV') === 'prod',
         sameSite: 'lax',
       },
       store: redisStore

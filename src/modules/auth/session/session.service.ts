@@ -6,13 +6,14 @@ import { verify } from 'argon2';
 import type { Request } from 'express';
 import { CreateAccountDto } from '@/src/modules/auth/account/dto/create-account.dto';
 import { AccountService } from '@/src/modules/auth/account/account.service';
+import { getSessionMetadata } from '@/src/shared/utils/session-metadata';
 
 @Injectable()
 export class SessionService {
 
   constructor(private readonly prismaService: PrismaService, private readonly accountService: AccountService) {}
 
-  public async login(dto: LoginAccountDto, req: Request) {
+  public async login(dto: LoginAccountDto, req: Request, userAgent: string) {
     const {number, cloudPassword} = dto;
     const user = await this.existUser(number);
 
@@ -26,9 +27,11 @@ export class SessionService {
       }
     }
 
+    const metadata = getSessionMetadata(req,  userAgent);
     return new Promise((resolve, reject) => {
       req.session.userId = user.id;
       req.session.createdAt = new Date();
+      req.session.metadata = metadata;
 
       req.session.save((err) => {
         if (err) {
@@ -41,12 +44,15 @@ export class SessionService {
     })
   }
 
-  public async register(dto: CreateAccountDto, req: Request) {
+  public async register(dto: CreateAccountDto, req: Request, userAgent: string) {
     const user = await this.accountService.createAccount(dto);
+
+    const metadata = getSessionMetadata(req,  userAgent);
 
     return new Promise((resolve, reject) => {
       req.session.userId = user.id;
       req.session.createdAt = new Date();
+      req.session.metadata = metadata;
 
       req.session.save((err) => {
         if (err) {

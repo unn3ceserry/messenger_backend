@@ -38,7 +38,8 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: [config.getOrThrow<string>('CLIENT_URL')],
+    origin: true,
+    credentials: true,
   });
   await app.listen(config.getOrThrow<string>('APPLICATION_PORT'));
 }

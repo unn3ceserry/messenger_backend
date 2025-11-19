@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Req } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { LoginAccountDto } from '@/src/modules/auth/session/dto/login-account.dto';
 import type { Request } from 'express';
@@ -25,5 +25,30 @@ export class SessionController {
   @Get('/logout')
   public async logout(@Req() req: Request) {
     return this.sessionService.logout(req);
+  }
+
+  @Get('/get/all')
+  public async findByUser(@Req() req: Request) {
+    return this.sessionService.findByUser(req);
+  }
+
+  @Get('/get/current')
+  public async findCurrent(@Req() req: Request) {
+    return this.sessionService.findCurrent(req);
+  }
+
+  @Delete('/clear')
+  public async remove(@Req() req: Request, @Body('id') id: string) {
+    return this.sessionService.remove(req, id);
+  }
+
+  @Delete('/clear/all')
+  public async removeAll(@Req() req: Request) {
+    return this.sessionService.removeAll(req);
+  }
+
+  @Delete('/coockie/clear')
+  public async clearCookie(@Req() req: Request) {
+    return this.sessionService.clearCookie(req);
   }
 }

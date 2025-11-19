@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { CreateAccountDto } from '@/src/modules/auth/account/dto/create-account.dto';
 import { User } from '@/prisma/generated/prisma';
@@ -25,9 +25,9 @@ export class AccountService {
 
   public async getMe(user: User): Promise<User> {
     const foundUser = await this.prismaService.user.findUnique(({
-      where: {id: user.id},
-    }))
-    if(!foundUser) {
+      where: { id: user.id },
+    }));
+    if (!foundUser) {
       throw new UnauthorizedException('Пользователь не авторизирован.');
     }
     return foundUser;

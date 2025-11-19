@@ -1,16 +1,17 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { CreateAccountDto } from '@/src/modules/auth/account/dto/create-account.dto';
+import { User } from '@/prisma/generated/prisma';
 
 @Injectable()
 export class AccountService {
   constructor(private readonly prismaService: PrismaService) {
   }
 
-  public async createAccount(dto: CreateAccountDto): Promise<CreateAccountDto> {
+  public async createAccount(dto: CreateAccountDto): Promise<User> {
     const { lastName, firstName, username, number } = dto;
     await this.existUser(username, number);
-    await this.prismaService.user.create(({
+    const user = await this.prismaService.user.create(({
       data: {
         username,
         firstName,
@@ -19,9 +20,8 @@ export class AccountService {
       },
     }));
 
-    return { lastName, firstName, username, number };
+    return user;
   }
-
 
   // HELPERS
 

@@ -136,6 +136,14 @@ export class AccountService {
         throw new UnauthorizedException('Неверный облачный пароль.');
       }
     }
+    
+    const existingUser = await this.prismaService.user.findUnique({
+      where: { email: newEmail },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Почта уже используется другим пользователем.');
+    }
 
     await this.prismaService.user.update({
       where: {

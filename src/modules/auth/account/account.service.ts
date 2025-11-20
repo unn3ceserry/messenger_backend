@@ -196,6 +196,22 @@ export class AccountService {
     return true;
   }
 
+  public async setNames(user: User, firstname: string, lastname: string): Promise<boolean> {
+    if((lastname.length < 2) || (firstname.length < 2)) {
+      throw new ConflictException('Минимальная длинна 2.')
+    }
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        firstName: firstname,
+        lastName: lastname,
+      }
+    })
+    return true;
+  }
+
   // HELPERS
 
   public async existUser(username: string, number: string): Promise<boolean> {

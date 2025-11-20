@@ -59,4 +59,9 @@ export class AccountController {
   public async removeBio(@GetUser() user: User) {
     return this.accountService.removeBio(user);
   }
+
+  @Post('/set-name')
+  public async setNames(@GetUser() user: User, @Body('firstname') firstname: string, @Body('lastname') lastname: string) {
+    return this.accountService.setNames(user, firstname, lastname);
+  }
 }

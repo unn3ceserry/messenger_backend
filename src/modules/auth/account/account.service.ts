@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
-  Injectable,
+  Injectable, NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
@@ -11,6 +11,7 @@ import { Twilio } from 'twilio';
 import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
 import { hash, verify } from 'argon2';
 import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
+import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
 
 @Injectable()
 export class AccountService {
@@ -108,6 +109,45 @@ export class AccountService {
     })
     return true;
   };
+
+  public async addEmail(user: User, email: string): Promise<boolean> {
+    if(user.email) {
+      throw new ConflictException('К аккаунту уже привязана почта.')
+    }
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        email
+      }
+    })
+    return true;
+  }
+
+  public async updateEmail(user: User, dto: ChangeEmailDto): Promise<boolean>  {
+    const {newEmail, cloudPassword} = dto;
+    if (user.cloudPassword) {
+      if (!cloudPassword) {
+        throw new NotFoundException({message: 'Введите облачный пароль.', type: 'NON_PASSWORD'});
+      }
+      const isValidPassword = await verify(user.cloudPassword, cloudPassword);
+      if (!isValidPassword) {
+        throw new UnauthorizedException('Неверный облачный пароль.');
+      }
+    }
+
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        email: newEmail,
+      }
+    })
+    return true;
+  }
+  
 
   // HELPERS
 

@@ -4,6 +4,7 @@ import { GetUser } from '@/src/shared/decorators/get-user.decorator';
 import type { User } from '@/prisma/generated/prisma';
 import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
 import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
+import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
 
 @Controller('account')
 export class AccountController {
@@ -29,4 +30,13 @@ export class AccountController {
     return this.accountService.removePassword(user, password);
   }
 
+  @Post('/set-email')
+  public async addEmail(@GetUser() user: User, @Body('email') email: string) {
+    return this.accountService.addEmail(user, email);
+  }
+
+  @Patch('/update-email')
+  public async updateEmail(@GetUser() user: User, @Body() dto: ChangeEmailDto) {
+    return this.accountService.updateEmail(user, dto);
+  }
 }

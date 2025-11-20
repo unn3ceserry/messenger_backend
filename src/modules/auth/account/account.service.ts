@@ -2,17 +2,20 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { CreateAccountDto } from '@/src/modules/auth/account/dto/create-account.dto';
 import { User } from '@/prisma/generated/prisma';
 import { Twilio } from 'twilio';
+import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
+import { hash, verify } from 'argon2';
+import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
 
 @Injectable()
 export class AccountService {
   private readonly twilioClient: Twilio;
+
   constructor(private readonly prismaService: PrismaService) {
     this.twilioClient = new Twilio(
       process.env.TWILIO_ACCOUNT_SID,
@@ -22,7 +25,7 @@ export class AccountService {
 
   public async createAccount(dto: CreateAccountDto): Promise<User> {
     const { lastName, firstName, username, number, code } = dto;
-    await this.verifyOtpCode(number, code)
+    await this.verifyOtpCode(number, code);
     await this.existUser(username, number);
     const user = await this.prismaService.user.create(({
       data: {
@@ -45,6 +48,66 @@ export class AccountService {
     }
     return foundUser;
   }
+
+  public async setPassword(user: User, dto: SetPasswordDto): Promise<boolean> {
+    if (user.cloudPassword) {
+      throw new ConflictException('Вы уже используете пароль.');
+    }
+    const { password, confirmPassword } = dto;
+    if(password !== confirmPassword) {
+      throw new ConflictException('Пароль отличается от первого.');
+    }
+    const hashPassword = await hash(password);
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        cloudPassword: hashPassword,
+      }
+    })
+    return true;
+  };
+
+  public async changePassword(user: User, dto: ChangePasswordDto): Promise<boolean> {
+    if (!user.cloudPassword) {
+      throw new ConflictException('Вы не используете пароль.');
+    }
+    const { password, newPassword } = dto;
+    const verifyPassword = await verify(user.cloudPassword, password);
+    if(!verifyPassword) {
+      throw new ConflictException('Неверный пароль.');
+    }
+    const hashPassword = await hash(newPassword);
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        cloudPassword: hashPassword,
+      }
+    })
+    return true;
+  };
+
+  public async removePassword(user: User, password: string): Promise<boolean> {
+    if (!user.cloudPassword) {
+      throw new ConflictException('Вы не используете пароль.');
+    }
+    const verifyPassword = await verify(user.cloudPassword, password);
+    if(!verifyPassword) {
+      throw new ConflictException('Неверный пароль.');
+    }
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        cloudPassword: null,
+      }
+    })
+    return true;
+  };
 
   // HELPERS
 
@@ -70,7 +133,7 @@ export class AccountService {
     if (!/^\+\d{10,15}$/.test(formattedNumber)) {
       throw new BadRequestException('Неверный формат номера телефона.');
     }
-    if(process.env.TWILIO_PHONE_NUMBER === phoneNumber) {
+    if (process.env.TWILIO_PHONE_NUMBER === phoneNumber) {
       throw new BadRequestException('Вы не можете отправить SMS на этот номер.');
     }
     try {
@@ -78,21 +141,21 @@ export class AccountService {
       const isExistCode = await this.prismaService.codes.findUnique({
         where: {
           number: phoneNumber,
-        }
-      })
+        },
+      });
 
-      if(isExistCode) {
+      if (isExistCode) {
         await this.prismaService.codes.delete({
           where: {
             number: phoneNumber,
-          }
-        })
+          },
+        });
       }
       await this.prismaService.codes.create({
         data: {
           number: phoneNumber,
           code: otp,
-        }
+        },
       });
       await this.twilioClient.messages.create({
         body: `Ваш код для підтвердження: ${otp}. Використайте його, щоб увійти.`,
@@ -120,19 +183,19 @@ export class AccountService {
 
   private async sendCode(number: string) {
     const otp = await this.sendOtpToMobile(number);
-    return {message: 'Код подтверждения успешно отправлен.', code: otp}
+    return { message: 'Код подтверждения успешно отправлен.', code: otp };
   }
 
   public async verifyOtpCode(number: string, code?: string) {
     const codeInDatabase = await this.prismaService.codes.findUnique({
-      where: { number }
+      where: { number },
     });
 
     if (!codeInDatabase) {
       await this.sendCode(number);
       throw new BadRequestException({
         message: 'Код подтверждения отправлен. Пожалуйста, введите код, чтобы продолжить.',
-        type: 'NON_CODE'
+        type: 'NON_CODE',
       });
     }
 

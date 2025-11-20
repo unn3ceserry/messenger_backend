@@ -1,7 +1,9 @@
-import { Controller, Get} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
 import { AccountService } from '@/src/modules/auth/account/account.service';
 import { GetUser } from '@/src/shared/decorators/get-user.decorator';
 import type { User } from '@/prisma/generated/prisma';
+import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
+import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
 
 @Controller('account')
 export class AccountController {
@@ -12,5 +14,19 @@ export class AccountController {
     return this.accountService.getMe(user);
   }
 
+  @Post('/set-password')
+  public async setPassword(@GetUser() user: User, @Body() dto: SetPasswordDto) {
+    return this.accountService.setPassword(user, dto);
+  }
+
+  @Patch('/change-password')
+  public async changePassword(@GetUser() user: User, @Body() dto: ChangePasswordDto) {
+    return this.accountService.changePassword(user, dto);
+  }
+
+  @Delete('/remove-password')
+  public async removePassword(@GetUser() user: User, @Body('password') password: string ) {
+    return this.accountService.removePassword(user, password);
+  }
 
 }

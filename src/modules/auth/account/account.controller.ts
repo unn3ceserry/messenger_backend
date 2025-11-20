@@ -39,4 +39,14 @@ export class AccountController {
   public async updateEmail(@GetUser() user: User, @Body() dto: ChangeEmailDto) {
     return this.accountService.updateEmail(user, dto);
   }
+
+  @Post('/set-birthday')
+  public async setDateBirthdate(@GetUser() user: User, @Body('date') date: string) {
+    return this.accountService.setDateBirthdate(user, date);
+  }
+
+  @Delete('/remove-birthday')
+  public async removeDateBirthdate(@GetUser() user: User) {
+    return this.accountService.removeDateBirthdate(user);
+  }
 }

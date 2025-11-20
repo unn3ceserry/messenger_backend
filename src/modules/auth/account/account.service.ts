@@ -147,7 +147,30 @@ export class AccountService {
     })
     return true;
   }
-  
+
+  public async setDateBirthdate(user: User, date: string): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        birthday: new Date(date)
+      }
+    })
+    return true;
+  }
+
+  public async removeDateBirthdate(user: User): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        birthday: null
+      }
+    })
+    return true;
+  }
 
   // HELPERS
 

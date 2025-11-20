@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -14,20 +15,22 @@ import { AccountService } from '@/src/modules/auth/account/account.service';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata';
 import { RedisService } from '@/src/core/redis/redis.service';
 import type { Request } from 'express';
+import { Twilio } from 'twilio';
 
 @Injectable()
 export class SessionService {
 
-  constructor(private readonly prismaService: PrismaService, private readonly accountService: AccountService, private readonly redisService: RedisService) {
-  }
+  constructor(private readonly prismaService: PrismaService, private readonly accountService: AccountService, private readonly redisService: RedisService) {}
 
   public async login(dto: LoginAccountDto, req: Request, userAgent: string) {
-    const { number, cloudPassword } = dto;
+    const { number, cloudPassword, code } = dto;
     const user = await this.existUser(number);
+
+    await this.accountService.verifyOtpCode(number, code)
 
     if (user.cloudPassword) {
       if (!cloudPassword) {
-        throw new NotFoundException('Введите облачный пароль.');
+        throw new NotFoundException({message: 'Введите облачный пароль.', type: 'NON_PASSWORD'});
       }
       const isValidPassword = await verify(user.cloudPassword, cloudPassword);
       if (!isValidPassword) {
@@ -53,24 +56,28 @@ export class SessionService {
   }
 
   public async register(dto: CreateAccountDto, req: Request, userAgent: string) {
-    const user = await this.accountService.createAccount(dto);
+    try {
+      const user = await this.accountService.createAccount(dto);
 
-    const metadata = getSessionMetadata(req, userAgent);
+      const metadata = getSessionMetadata(req, userAgent);
 
-    return new Promise((resolve, reject) => {
-      req.session.userId = user.id;
-      req.session.createdAt = new Date();
-      req.session.metadata = metadata;
+      return new Promise((resolve, reject) => {
+        req.session.userId = user.id;
+        req.session.createdAt = new Date();
+        req.session.metadata = metadata;
 
-      req.session.save((err) => {
-        if (err) {
-          return reject(new InternalServerErrorException('Не удалось сохранить сессию.'));
-        }
-        resolve(user);
+        req.session.save((err) => {
+          if (err) {
+            return reject(new InternalServerErrorException('Не удалось сохранить сессию.'));
+          }
+          resolve(user);
+        });
       });
-
-    });
+    } catch (error) {
+      throw error;
+    }
   }
+
 
   public async logout(req: Request) {
     return new Promise((resolve, reject) => {
@@ -177,6 +184,10 @@ export class SessionService {
       await this.redisService.del(`session:${key.id}`);
     }
     return true;
+  }
+
+  public async sendOtpToMobile(number: string) {
+    return this.accountService.sendOtpToMobile(number);
   }
 
   // HELPERS

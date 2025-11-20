@@ -125,6 +125,15 @@ exports.Prisma.UserContactsScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CodesScalarFieldEnum = {
+  id: 'id',
+  number: 'number',
+  code: 'code',
+  isActived: 'isActived',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -147,7 +156,8 @@ exports.WhoCanSeen = exports.$Enums.WhoCanSeen = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  UserContacts: 'UserContacts'
+  UserContacts: 'UserContacts',
+  Codes: 'Codes'
 };
 /**
  * Create the Client
@@ -196,13 +206,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id String @id @default(uuid())\n\n  email    String? @unique\n  number   String  @unique\n  username String  @unique\n\n  avatars  String?\n  bio      String?\n  birthday DateTime?\n\n  firstName String\n  lastName  String\n\n  contacts     UserContacts[]\n  blockedUsers String[]       @default([])\n\n  // privacy\n  phoneVisible    WhoCanSeen @default(ALL)\n  emailVisible    WhoCanSeen @default(ALL)\n  bioVisible      WhoCanSeen @default(ALL)\n  avatarsVisible  WhoCanSeen @default(ALL)\n  birthdayVisible WhoCanSeen @default(ALL)\n\n  // security\n  cloudPassword String?\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@map(\"users\")\n}\n\nmodel UserContacts {\n  id               String   @id @default(uuid())\n  username         String\n  user             User     @relation(fields: [username], references: [username])\n  usernameContact  String\n  firstNameContact String\n  lastNameContact  String\n  avatarsContact   String[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@map(\"contacts\")\n}\n\nenum WhoCanSeen {\n  ALL\n  CONTACTS\n  I\n}\n",
-  "inlineSchemaHash": "f4f7cad69ac3d02bb73ee2eb89003cb30342955ed68624830cd2430bab6a319f",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id String @id @default(uuid())\n\n  email    String? @unique\n  number   String  @unique\n  username String  @unique\n\n  avatars  String?\n  bio      String?\n  birthday DateTime?\n\n  firstName String\n  lastName  String\n\n  contacts     UserContacts[]\n  blockedUsers String[]       @default([])\n\n  // privacy\n  phoneVisible    WhoCanSeen @default(ALL)\n  emailVisible    WhoCanSeen @default(ALL)\n  bioVisible      WhoCanSeen @default(ALL)\n  avatarsVisible  WhoCanSeen @default(ALL)\n  birthdayVisible WhoCanSeen @default(ALL)\n\n  // security\n  cloudPassword String?\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@map(\"users\")\n}\n\nmodel UserContacts {\n  id               String   @id @default(uuid())\n  username         String\n  user             User     @relation(fields: [username], references: [username])\n  usernameContact  String\n  firstNameContact String\n  lastNameContact  String\n  avatarsContact   String[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@map(\"contacts\")\n}\n\nmodel Codes {\n  id        String   @id @default(uuid())\n  number    String   @unique\n  code      String\n  isActived Boolean  @default(false)\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@map(\"codes\")\n}\n\nenum WhoCanSeen {\n  ALL\n  CONTACTS\n  I\n}\n",
+  "inlineSchemaHash": "45bb8a9633b2ef0e5061d01c9a4464b1cc0eca925907804ab503e5ba0f0bf222",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"number\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"avatars\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"bio\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"birthday\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contacts\",\"kind\":\"object\",\"type\":\"UserContacts\",\"relationName\":\"UserToUserContacts\"},{\"name\":\"blockedUsers\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"phoneVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"emailVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"bioVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"avatarsVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"birthdayVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"cloudPassword\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"users\"},\"UserContacts\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserContacts\"},{\"name\":\"usernameContact\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstNameContact\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastNameContact\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"avatarsContact\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"contacts\"}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"number\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"avatars\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"bio\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"birthday\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contacts\",\"kind\":\"object\",\"type\":\"UserContacts\",\"relationName\":\"UserToUserContacts\"},{\"name\":\"blockedUsers\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"phoneVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"emailVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"bioVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"avatarsVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"birthdayVisible\",\"kind\":\"enum\",\"type\":\"WhoCanSeen\"},{\"name\":\"cloudPassword\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"users\"},\"UserContacts\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserContacts\"},{\"name\":\"usernameContact\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstNameContact\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastNameContact\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"avatarsContact\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"contacts\"},\"Codes\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"number\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"code\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isActived\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"codes\"}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

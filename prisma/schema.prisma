@@ -56,6 +56,17 @@ model UserContacts {
   @@map("contacts")
 }
 
+model Codes {
+  id        String   @id @default(uuid())
+  number    String   @unique
+  code      String
+  isActived Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("codes")
+}
+
 enum WhoCanSeen {
   ALL
   CONTACTS

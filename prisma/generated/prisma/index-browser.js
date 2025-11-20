@@ -153,6 +153,15 @@ exports.Prisma.UserContactsScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CodesScalarFieldEnum = {
+  id: 'id',
+  number: 'number',
+  code: 'code',
+  isActived: 'isActived',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -175,7 +184,8 @@ exports.WhoCanSeen = exports.$Enums.WhoCanSeen = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  UserContacts: 'UserContacts'
+  UserContacts: 'UserContacts',
+  Codes: 'Codes'
 };
 
 /**

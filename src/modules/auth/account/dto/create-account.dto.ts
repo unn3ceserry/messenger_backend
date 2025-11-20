@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateAccountDto {
   @IsNotEmpty({message: 'Номер не может быть пустым.'})
@@ -17,4 +17,10 @@ export class CreateAccountDto {
   @IsNotEmpty({message: 'Фамилия пользователя не может быть пустой.'})
   @IsString({message: 'Неверный формат фамилии.'})
   lastName: string;
+
+  @IsOptional()
+  @IsString({message: 'Неверный формат кода подтверждения.'})
+  @MinLength(6, {message: 'Длинна пароля не должна быть меньше 6 символов.'})
+  @MaxLength(6, {message: 'Длинна пароля не должна быть больше 6 символов.'})
+  code?: string;
 }

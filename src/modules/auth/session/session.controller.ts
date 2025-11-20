@@ -51,4 +51,10 @@ export class SessionController {
   public async clearCookie(@Req() req: Request) {
     return this.sessionService.clearCookie(req);
   }
+
+  @Public()
+  @Post('/resend/code')
+  public async resendCode(@Body('number') number: string) {
+    return this.sessionService.sendOtpToMobile(number);
+  }
 }

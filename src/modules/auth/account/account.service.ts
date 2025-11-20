@@ -172,6 +172,30 @@ export class AccountService {
     return true;
   }
 
+  public async setBio(user: User, bio: string): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        bio
+      }
+    })
+    return true;
+  }
+
+  public async removeBio(user: User): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        bio: null
+      }
+    })
+    return true;
+  }
+
   // HELPERS
 
   public async existUser(username: string, number: string): Promise<boolean> {

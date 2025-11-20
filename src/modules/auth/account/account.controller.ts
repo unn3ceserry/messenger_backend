@@ -49,4 +49,14 @@ export class AccountController {
   public async removeDateBirthdate(@GetUser() user: User) {
     return this.accountService.removeDateBirthdate(user);
   }
+
+  @Post('/set-bio')
+  public async setBio(@GetUser() user: User, @Body('bio') bio: string) {
+    return this.accountService.setBio(user, bio);
+  }
+
+  @Delete('/remove-bio')
+  public async removeBio(@GetUser() user: User) {
+    return this.accountService.removeBio(user);
+  }
 }

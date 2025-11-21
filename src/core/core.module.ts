@@ -6,9 +6,10 @@ import { SessionModule } from '@/src/modules/auth/session/session.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from '@/src/shared/guards/auth.guard';
 import { AccountModule } from '@/src/modules/auth/account/account.module';
+import { ContactsModule } from '@/src/modules/contacts/contacts.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), RedisModule, SessionModule, AccountModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), RedisModule, SessionModule, AccountModule, ContactsModule],
   providers: [PrismaService, {
     provide: APP_GUARD,
     useClass: AuthGuard,

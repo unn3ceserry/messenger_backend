@@ -2342,6 +2342,7 @@ export namespace Prisma {
     usernameContact: string | null
     firstNameContact: string | null
     lastNameContact: string | null
+    avatarsContact: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2352,6 +2353,7 @@ export namespace Prisma {
     usernameContact: string | null
     firstNameContact: string | null
     lastNameContact: string | null
+    avatarsContact: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2375,6 +2377,7 @@ export namespace Prisma {
     usernameContact?: true
     firstNameContact?: true
     lastNameContact?: true
+    avatarsContact?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2385,6 +2388,7 @@ export namespace Prisma {
     usernameContact?: true
     firstNameContact?: true
     lastNameContact?: true
+    avatarsContact?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2479,7 +2483,7 @@ export namespace Prisma {
     usernameContact: string
     firstNameContact: string
     lastNameContact: string
-    avatarsContact: string[]
+    avatarsContact: string | null
     createdAt: Date
     updatedAt: Date
     _count: UserContactsCountAggregateOutputType | null
@@ -2570,7 +2574,7 @@ export namespace Prisma {
       usernameContact: string
       firstNameContact: string
       lastNameContact: string
-      avatarsContact: string[]
+      avatarsContact: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["userContacts"]>
@@ -3002,7 +3006,7 @@ export namespace Prisma {
     readonly usernameContact: FieldRef<"UserContacts", 'String'>
     readonly firstNameContact: FieldRef<"UserContacts", 'String'>
     readonly lastNameContact: FieldRef<"UserContacts", 'String'>
-    readonly avatarsContact: FieldRef<"UserContacts", 'String[]'>
+    readonly avatarsContact: FieldRef<"UserContacts", 'String'>
     readonly createdAt: FieldRef<"UserContacts", 'DateTime'>
     readonly updatedAt: FieldRef<"UserContacts", 'DateTime'>
   }
@@ -4715,7 +4719,7 @@ export namespace Prisma {
     usernameContact?: StringFilter<"UserContacts"> | string
     firstNameContact?: StringFilter<"UserContacts"> | string
     lastNameContact?: StringFilter<"UserContacts"> | string
-    avatarsContact?: StringNullableListFilter<"UserContacts">
+    avatarsContact?: StringNullableFilter<"UserContacts"> | string | null
     createdAt?: DateTimeFilter<"UserContacts"> | Date | string
     updatedAt?: DateTimeFilter<"UserContacts"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -4727,7 +4731,7 @@ export namespace Prisma {
     usernameContact?: SortOrder
     firstNameContact?: SortOrder
     lastNameContact?: SortOrder
-    avatarsContact?: SortOrder
+    avatarsContact?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
@@ -4742,7 +4746,7 @@ export namespace Prisma {
     usernameContact?: StringFilter<"UserContacts"> | string
     firstNameContact?: StringFilter<"UserContacts"> | string
     lastNameContact?: StringFilter<"UserContacts"> | string
-    avatarsContact?: StringNullableListFilter<"UserContacts">
+    avatarsContact?: StringNullableFilter<"UserContacts"> | string | null
     createdAt?: DateTimeFilter<"UserContacts"> | Date | string
     updatedAt?: DateTimeFilter<"UserContacts"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -4754,7 +4758,7 @@ export namespace Prisma {
     usernameContact?: SortOrder
     firstNameContact?: SortOrder
     lastNameContact?: SortOrder
-    avatarsContact?: SortOrder
+    avatarsContact?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserContactsCountOrderByAggregateInput
@@ -4771,7 +4775,7 @@ export namespace Prisma {
     usernameContact?: StringWithAggregatesFilter<"UserContacts"> | string
     firstNameContact?: StringWithAggregatesFilter<"UserContacts"> | string
     lastNameContact?: StringWithAggregatesFilter<"UserContacts"> | string
-    avatarsContact?: StringNullableListFilter<"UserContacts">
+    avatarsContact?: StringNullableWithAggregatesFilter<"UserContacts"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"UserContacts"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"UserContacts"> | Date | string
   }
@@ -4989,7 +4993,7 @@ export namespace Prisma {
     usernameContact: string
     firstNameContact: string
     lastNameContact: string
-    avatarsContact?: UserContactsCreateavatarsContactInput | string[]
+    avatarsContact?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutContactsInput
@@ -5001,7 +5005,7 @@ export namespace Prisma {
     usernameContact: string
     firstNameContact: string
     lastNameContact: string
-    avatarsContact?: UserContactsCreateavatarsContactInput | string[]
+    avatarsContact?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5011,7 +5015,7 @@ export namespace Prisma {
     usernameContact?: StringFieldUpdateOperationsInput | string
     firstNameContact?: StringFieldUpdateOperationsInput | string
     lastNameContact?: StringFieldUpdateOperationsInput | string
-    avatarsContact?: UserContactsUpdateavatarsContactInput | string[]
+    avatarsContact?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutContactsNestedInput
@@ -5023,7 +5027,7 @@ export namespace Prisma {
     usernameContact?: StringFieldUpdateOperationsInput | string
     firstNameContact?: StringFieldUpdateOperationsInput | string
     lastNameContact?: StringFieldUpdateOperationsInput | string
-    avatarsContact?: UserContactsUpdateavatarsContactInput | string[]
+    avatarsContact?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5034,7 +5038,7 @@ export namespace Prisma {
     usernameContact: string
     firstNameContact: string
     lastNameContact: string
-    avatarsContact?: UserContactsCreateavatarsContactInput | string[]
+    avatarsContact?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5044,7 +5048,7 @@ export namespace Prisma {
     usernameContact?: StringFieldUpdateOperationsInput | string
     firstNameContact?: StringFieldUpdateOperationsInput | string
     lastNameContact?: StringFieldUpdateOperationsInput | string
-    avatarsContact?: UserContactsUpdateavatarsContactInput | string[]
+    avatarsContact?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5055,7 +5059,7 @@ export namespace Prisma {
     usernameContact?: StringFieldUpdateOperationsInput | string
     firstNameContact?: StringFieldUpdateOperationsInput | string
     lastNameContact?: StringFieldUpdateOperationsInput | string
-    avatarsContact?: UserContactsUpdateavatarsContactInput | string[]
+    avatarsContact?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5362,6 +5366,7 @@ export namespace Prisma {
     usernameContact?: SortOrder
     firstNameContact?: SortOrder
     lastNameContact?: SortOrder
+    avatarsContact?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -5372,6 +5377,7 @@ export namespace Prisma {
     usernameContact?: SortOrder
     firstNameContact?: SortOrder
     lastNameContact?: SortOrder
+    avatarsContact?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -5487,19 +5493,10 @@ export namespace Prisma {
     deleteMany?: UserContactsScalarWhereInput | UserContactsScalarWhereInput[]
   }
 
-  export type UserContactsCreateavatarsContactInput = {
-    set: string[]
-  }
-
   export type UserCreateNestedOneWithoutContactsInput = {
     create?: XOR<UserCreateWithoutContactsInput, UserUncheckedCreateWithoutContactsInput>
     connectOrCreate?: UserCreateOrConnectWithoutContactsInput
     connect?: UserWhereUniqueInput
-  }
-
-  export type UserContactsUpdateavatarsContactInput = {
-    set?: string[]
-    push?: string | string[]
   }
 
   export type UserUpdateOneRequiredWithoutContactsNestedInput = {
@@ -5683,7 +5680,7 @@ export namespace Prisma {
     usernameContact: string
     firstNameContact: string
     lastNameContact: string
-    avatarsContact?: UserContactsCreateavatarsContactInput | string[]
+    avatarsContact?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5693,7 +5690,7 @@ export namespace Prisma {
     usernameContact: string
     firstNameContact: string
     lastNameContact: string
-    avatarsContact?: UserContactsCreateavatarsContactInput | string[]
+    avatarsContact?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5733,7 +5730,7 @@ export namespace Prisma {
     usernameContact?: StringFilter<"UserContacts"> | string
     firstNameContact?: StringFilter<"UserContacts"> | string
     lastNameContact?: StringFilter<"UserContacts"> | string
-    avatarsContact?: StringNullableListFilter<"UserContacts">
+    avatarsContact?: StringNullableFilter<"UserContacts"> | string | null
     createdAt?: DateTimeFilter<"UserContacts"> | Date | string
     updatedAt?: DateTimeFilter<"UserContacts"> | Date | string
   }
@@ -5843,7 +5840,7 @@ export namespace Prisma {
     usernameContact: string
     firstNameContact: string
     lastNameContact: string
-    avatarsContact?: UserContactsCreateavatarsContactInput | string[]
+    avatarsContact?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5853,7 +5850,7 @@ export namespace Prisma {
     usernameContact?: StringFieldUpdateOperationsInput | string
     firstNameContact?: StringFieldUpdateOperationsInput | string
     lastNameContact?: StringFieldUpdateOperationsInput | string
-    avatarsContact?: UserContactsUpdateavatarsContactInput | string[]
+    avatarsContact?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5863,7 +5860,7 @@ export namespace Prisma {
     usernameContact?: StringFieldUpdateOperationsInput | string
     firstNameContact?: StringFieldUpdateOperationsInput | string
     lastNameContact?: StringFieldUpdateOperationsInput | string
-    avatarsContact?: UserContactsUpdateavatarsContactInput | string[]
+    avatarsContact?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5873,7 +5870,7 @@ export namespace Prisma {
     usernameContact?: StringFieldUpdateOperationsInput | string
     firstNameContact?: StringFieldUpdateOperationsInput | string
     lastNameContact?: StringFieldUpdateOperationsInput | string
-    avatarsContact?: UserContactsUpdateavatarsContactInput | string[]
+    avatarsContact?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

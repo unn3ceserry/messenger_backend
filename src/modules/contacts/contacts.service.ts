@@ -6,18 +6,7 @@ import { User, UserContacts } from '@/prisma/generated/prisma';
 export class ContactsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  public async getMyContacts(user: User): Promise<{
-    contacts: {
-      id: string
-      username: string
-      createdAt: Date
-      updatedAt: Date
-      usernameContact: string
-      firstNameContact: string
-      lastNameContact: string
-      avatarsContact: string | null
-    }[]
-  }> {
+  public async getMyContacts(user: User) {
     const myUser = await this.prismaService.user.findUnique({
       where: { id: user.id },
       include: { contacts: true },

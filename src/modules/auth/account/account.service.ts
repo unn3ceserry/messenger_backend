@@ -136,14 +136,12 @@ export class AccountService {
         throw new UnauthorizedException('Неверный облачный пароль.');
       }
     }
-    
+
     const existingUser = await this.prismaService.user.findUnique({
       where: { email: newEmail },
     });
 
-    if (existingUser) {
-      throw new ConflictException('Почта уже используется другим пользователем.');
-    }
+
 
     await this.prismaService.user.update({
       where: {
@@ -215,6 +213,31 @@ export class AccountService {
       data: {
         firstName: firstname,
         lastName: lastname,
+      }
+    })
+    return true;
+  }
+
+  public async updateUsername(user: User, username: string): Promise<boolean> {
+    if(username.length < 4) {
+      throw new ConflictException('Минимальная длинна имени пользователя не может быть меньше 4 символов.');
+    }
+    const existName = await this.prismaService.user.findUnique({
+      where: {
+        username
+      }
+    })
+
+    if(existName) {
+      throw new ConflictException('Это имя пользователя уже занято.');
+    }
+
+    await this.prismaService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        username
       }
     })
     return true;

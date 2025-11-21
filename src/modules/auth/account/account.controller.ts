@@ -64,4 +64,9 @@ export class AccountController {
   public async setNames(@GetUser() user: User, @Body('firstname') firstname: string, @Body('lastname') lastname: string) {
     return this.accountService.setNames(user, firstname, lastname);
   }
+
+  @Patch('/change-username')
+  public async updateUsername(@GetUser() user: User, @Body('username') username: string) {
+    return this.accountService.updateUsername(user, username);
+  }
 }

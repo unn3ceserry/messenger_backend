@@ -55,18 +55,18 @@ export class AccountService {
       throw new ConflictException('Вы уже используете пароль.');
     }
     const { password, confirmPassword } = dto;
-    if(password !== confirmPassword) {
+    if (password !== confirmPassword) {
       throw new ConflictException('Пароль отличается от первого.');
     }
     const hashPassword = await hash(password);
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
         cloudPassword: hashPassword,
-      }
-    })
+      },
+    });
     return true;
   };
 
@@ -76,18 +76,18 @@ export class AccountService {
     }
     const { password, newPassword } = dto;
     const verifyPassword = await verify(user.cloudPassword, password);
-    if(!verifyPassword) {
+    if (!verifyPassword) {
       throw new ConflictException('Неверный пароль.');
     }
     const hashPassword = await hash(newPassword);
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
         cloudPassword: hashPassword,
-      }
-    })
+      },
+    });
     return true;
   };
 
@@ -96,40 +96,40 @@ export class AccountService {
       throw new ConflictException('Вы не используете пароль.');
     }
     const verifyPassword = await verify(user.cloudPassword, password);
-    if(!verifyPassword) {
+    if (!verifyPassword) {
       throw new ConflictException('Неверный пароль.');
     }
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
         cloudPassword: null,
-      }
-    })
+      },
+    });
     return true;
   };
 
   public async addEmail(user: User, email: string): Promise<boolean> {
-    if(user.email) {
-      throw new ConflictException('К аккаунту уже привязана почта.')
+    if (user.email) {
+      throw new ConflictException('К аккаунту уже привязана почта.');
     }
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
-        email
-      }
-    })
+        email,
+      },
+    });
     return true;
   }
 
-  public async updateEmail(user: User, dto: ChangeEmailDto): Promise<boolean>  {
-    const {newEmail, cloudPassword} = dto;
+  public async updateEmail(user: User, dto: ChangeEmailDto): Promise<boolean> {
+    const { newEmail, cloudPassword } = dto;
     if (user.cloudPassword) {
       if (!cloudPassword) {
-        throw new NotFoundException({message: 'Введите облачный пароль.', type: 'NON_PASSWORD'});
+        throw new NotFoundException({ message: 'Введите облачный пароль.', type: 'NON_PASSWORD' });
       }
       const isValidPassword = await verify(user.cloudPassword, cloudPassword);
       if (!isValidPassword) {
@@ -142,104 +142,158 @@ export class AccountService {
     });
 
 
-
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
         email: newEmail,
-      }
-    })
+      },
+    });
     return true;
   }
 
   public async setDateBirthdate(user: User, date: string): Promise<boolean> {
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
-        birthday: new Date(date)
-      }
-    })
+        birthday: new Date(date),
+      },
+    });
     return true;
   }
 
   public async removeDateBirthdate(user: User): Promise<boolean> {
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
-        birthday: null
-      }
-    })
+        birthday: null,
+      },
+    });
     return true;
   }
 
   public async setBio(user: User, bio: string): Promise<boolean> {
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
-        bio
-      }
-    })
+        bio,
+      },
+    });
     return true;
   }
 
   public async removeBio(user: User): Promise<boolean> {
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
-        bio: null
-      }
-    })
+        bio: null,
+      },
+    });
     return true;
   }
 
   public async setNames(user: User, firstname: string, lastname: string): Promise<boolean> {
-    if((lastname.length < 2) || (firstname.length < 2)) {
-      throw new ConflictException('Минимальная длинна 2.')
+    if ((lastname.length < 2) || (firstname.length < 2)) {
+      throw new ConflictException('Минимальная длинна 2.');
     }
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
         firstName: firstname,
         lastName: lastname,
-      }
-    })
+      },
+    });
     return true;
   }
 
   public async updateUsername(user: User, username: string): Promise<boolean> {
-    if(username.length < 4) {
+    if (username.length < 4) {
       throw new ConflictException('Минимальная длинна имени пользователя не может быть меньше 4 символов.');
     }
     const existName = await this.prismaService.user.findUnique({
       where: {
-        username
-      }
-    })
+        username,
+      },
+    });
 
-    if(existName) {
+    if (existName) {
       throw new ConflictException('Это имя пользователя уже занято.');
     }
 
     await this.prismaService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
-        username
-      }
-    })
+        username,
+      },
+    });
+    return true;
+  }
+
+  public async blockUser(user: User, id: string): Promise<boolean> {
+    const userFind = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!userFind) {
+      throw new NotFoundException('Пользователь не найден.');
+    }
+
+    if (user.blockedUsers.includes(id)) {
+      throw new ConflictException('Пользователь уже заблокирован.');
+    }
+    if (user.id === id) {
+      throw new ConflictException('Вы не можете заблокировать себя.');
+    }
+
+    await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        blockedUsers: [...user.blockedUsers, id],
+      },
+    });
+    return true;
+  }
+
+  public async unblockUser(user: User, id: string): Promise<boolean> {
+    const userFind = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!userFind) {
+      throw new NotFoundException('Пользователь не найден.');
+    }
+    if (!user.blockedUsers.includes(id)) {
+      throw new ConflictException('Пользователь не заблокирован.');
+    }
+    if (user.id === id) {
+      throw new ConflictException('Вы не можете заблокировать себя.');
+    }
+    await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        blockedUsers: [...user.blockedUsers.filter(userId => userId !== id)],
+      },
+    });
     return true;
   }
 

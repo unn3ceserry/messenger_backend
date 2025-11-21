@@ -69,4 +69,14 @@ export class AccountController {
   public async updateUsername(@GetUser() user: User, @Body('username') username: string) {
     return this.accountService.updateUsername(user, username);
   }
+
+  @Post('/block-user')
+  public async blockUser(@GetUser() user: User, @Body('id') id: string) {
+    return this.accountService.blockUser(user, id);
+  }
+
+  @Post('/unblock-user')
+  public async unblockUser(@GetUser() user: User, @Body('id') id: string) {
+    return this.accountService.unblockUser(user, id);
+  }
 }

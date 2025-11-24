@@ -1,7 +1,10 @@
 import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
-import { AccountService } from '@/src/modules/auth/account/account.service';
+import {
+  AccountService,
+  type VisibilityField,
+} from '@/src/modules/auth/account/account.service';
 import { GetUser } from '@/src/shared/decorators/get-user.decorator';
-import type { User } from '@/prisma/generated/prisma';
+import type { User, WhoCanSeen } from '@/prisma/generated/prisma';
 import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
 import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
 import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
@@ -21,12 +24,18 @@ export class AccountController {
   }
 
   @Patch('/change-password')
-  public async changePassword(@GetUser() user: User, @Body() dto: ChangePasswordDto) {
+  public async changePassword(
+    @GetUser() user: User,
+    @Body() dto: ChangePasswordDto,
+  ) {
     return this.accountService.changePassword(user, dto);
   }
 
   @Delete('/remove-password')
-  public async removePassword(@GetUser() user: User, @Body('password') password: string ) {
+  public async removePassword(
+    @GetUser() user: User,
+    @Body('password') password: string,
+  ) {
     return this.accountService.removePassword(user, password);
   }
 
@@ -41,7 +50,10 @@ export class AccountController {
   }
 
   @Post('/set-birthday')
-  public async setDateBirthdate(@GetUser() user: User, @Body('date') date: string) {
+  public async setDateBirthdate(
+    @GetUser() user: User,
+    @Body('date') date: string,
+  ) {
     return this.accountService.setDateBirthdate(user, date);
   }
 
@@ -61,12 +73,19 @@ export class AccountController {
   }
 
   @Post('/set-name')
-  public async setNames(@GetUser() user: User, @Body('firstname') firstname: string, @Body('lastname') lastname: string) {
+  public async setNames(
+    @GetUser() user: User,
+    @Body('firstname') firstname: string,
+    @Body('lastname') lastname: string,
+  ) {
     return this.accountService.setNames(user, firstname, lastname);
   }
 
   @Patch('/change-username')
-  public async updateUsername(@GetUser() user: User, @Body('username') username: string) {
+  public async updateUsername(
+    @GetUser() user: User,
+    @Body('username') username: string,
+  ) {
     return this.accountService.updateUsername(user, username);
   }
 
@@ -78,5 +97,14 @@ export class AccountController {
   @Post('/unblock-user')
   public async unblockUser(@GetUser() user: User, @Body('id') id: string) {
     return this.accountService.unblockUser(user, id);
+  }
+
+  @Post('/set-visibility')
+  public async setVisibility(
+    @Body('field') field: VisibilityField,
+    @GetUser() user: User,
+    @Body('whoCanSee') whoCanSee: WhoCanSeen,
+  ) {
+    return this.accountService.setVisibility(user, field, whoCanSee)
   }
 }

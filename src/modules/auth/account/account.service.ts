@@ -1,17 +1,26 @@
 import {
   BadRequestException,
   ConflictException,
-  Injectable, NotFoundException,
+  Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { CreateAccountDto } from '@/src/modules/auth/account/dto/create-account.dto';
-import { User } from '@/prisma/generated/prisma';
+import { User, WhoCanSeen } from '@/prisma/generated/prisma';
 import { Twilio } from 'twilio';
 import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
 import { hash, verify } from 'argon2';
 import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
 import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
+
+export enum VisibilityField {
+  Phone = 'phoneVisible',
+  Email = 'emailVisible',
+  Bio = 'bioVisible',
+  Avatars = 'avatarsVisible',
+  Birthday = 'birthdayVisible',
+}
 
 @Injectable()
 export class AccountService {
@@ -28,22 +37,22 @@ export class AccountService {
     const { lastName, firstName, username, number, code } = dto;
     await this.verifyOtpCode(number, code);
     await this.existUser(username, number);
-    const user = await this.prismaService.user.create(({
+    const user = await this.prismaService.user.create({
       data: {
         username,
         firstName,
         lastName,
         number,
       },
-    }));
+    });
 
     return user;
   }
 
   public async getMe(user: User): Promise<User> {
-    const foundUser = await this.prismaService.user.findUnique(({
+    const foundUser = await this.prismaService.user.findUnique({
       where: { id: user.id },
-    }));
+    });
     if (!foundUser) {
       throw new UnauthorizedException('Пользователь не авторизирован.');
     }
@@ -68,9 +77,12 @@ export class AccountService {
       },
     });
     return true;
-  };
+  }
 
-  public async changePassword(user: User, dto: ChangePasswordDto): Promise<boolean> {
+  public async changePassword(
+    user: User,
+    dto: ChangePasswordDto,
+  ): Promise<boolean> {
     if (!user.cloudPassword) {
       throw new ConflictException('Вы не используете пароль.');
     }
@@ -89,7 +101,7 @@ export class AccountService {
       },
     });
     return true;
-  };
+  }
 
   public async removePassword(user: User, password: string): Promise<boolean> {
     if (!user.cloudPassword) {
@@ -108,7 +120,7 @@ export class AccountService {
       },
     });
     return true;
-  };
+  }
 
   public async addEmail(user: User, email: string): Promise<boolean> {
     if (user.email) {
@@ -129,7 +141,10 @@ export class AccountService {
     const { newEmail, cloudPassword } = dto;
     if (user.cloudPassword) {
       if (!cloudPassword) {
-        throw new NotFoundException({ message: 'Введите облачный пароль.', type: 'NON_PASSWORD' });
+        throw new NotFoundException({
+          message: 'Введите облачный пароль.',
+          type: 'NON_PASSWORD',
+        });
       }
       const isValidPassword = await verify(user.cloudPassword, cloudPassword);
       if (!isValidPassword) {
@@ -140,7 +155,6 @@ export class AccountService {
     const existingUser = await this.prismaService.user.findUnique({
       where: { email: newEmail },
     });
-
 
     await this.prismaService.user.update({
       where: {
@@ -201,8 +215,12 @@ export class AccountService {
     return true;
   }
 
-  public async setNames(user: User, firstname: string, lastname: string): Promise<boolean> {
-    if ((lastname.length < 2) || (firstname.length < 2)) {
+  public async setNames(
+    user: User,
+    firstname: string,
+    lastname: string,
+  ): Promise<boolean> {
+    if (lastname.length < 2 || firstname.length < 2) {
       throw new ConflictException('Минимальная длинна 2.');
     }
     await this.prismaService.user.update({
@@ -219,7 +237,9 @@ export class AccountService {
 
   public async updateUsername(user: User, username: string): Promise<boolean> {
     if (username.length < 4) {
-      throw new ConflictException('Минимальная длинна имени пользователя не может быть меньше 4 символов.');
+      throw new ConflictException(
+        'Минимальная длинна имени пользователя не может быть меньше 4 символов.',
+      );
     }
     const existName = await this.prismaService.user.findUnique({
       where: {
@@ -291,9 +311,31 @@ export class AccountService {
         id: user.id,
       },
       data: {
-        blockedUsers: [...user.blockedUsers.filter(userId => userId !== id)],
+        blockedUsers: [...user.blockedUsers.filter((userId) => userId !== id)],
       },
     });
+    return true;
+  }
+
+  // VISIBLE SETTINGS
+
+  public async setVisibility(
+    user: User,
+    field: VisibilityField,
+    whoCanSee: WhoCanSeen,
+  ): Promise<boolean> {
+    if (!WhoCanSeen[whoCanSee] || !VisibilityField[field]) {
+      throw new ConflictException('Неверный тип.');
+    }
+    if (!Object.values(WhoCanSeen).includes(whoCanSee)) {
+      throw new ConflictException('Неверный тип WhoCanSeen.');
+    }
+
+    await this.prismaService.user.update({
+      where: { id: user.id },
+      data: { [VisibilityField[field]]: whoCanSee },
+    });
+
     return true;
   }
 
@@ -310,7 +352,9 @@ export class AccountService {
     });
 
     if (user) {
-      throw new ConflictException('Пользователь с такими данными уже существует.');
+      throw new ConflictException(
+        'Пользователь с такими данными уже существует.',
+      );
     }
     return true;
   }
@@ -322,10 +366,11 @@ export class AccountService {
       throw new BadRequestException('Неверный формат номера телефона.');
     }
     if (process.env.TWILIO_PHONE_NUMBER === phoneNumber) {
-      throw new BadRequestException('Вы не можете отправить SMS на этот номер.');
+      throw new BadRequestException(
+        'Вы не можете отправить SMS на этот номер.',
+      );
     }
     try {
-
       const isExistCode = await this.prismaService.codes.findUnique({
         where: {
           number: phoneNumber,
@@ -358,13 +403,15 @@ export class AccountService {
     }
   }
 
-
   private generateOtp(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const numbers = '0123456789';
     let otp = '';
     for (let i = 0; i < 6; i++) {
-      otp += i % 2 === 0 ? numbers.charAt(Math.floor(Math.random() * numbers.length)) : chars.charAt(Math.floor(Math.random() * chars.length));
+      otp +=
+        i % 2 === 0
+          ? numbers.charAt(Math.floor(Math.random() * numbers.length))
+          : chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return otp;
   }
@@ -382,16 +429,21 @@ export class AccountService {
     if (!codeInDatabase) {
       await this.sendCode(number);
       throw new BadRequestException({
-        message: 'Код подтверждения отправлен. Пожалуйста, введите код, чтобы продолжить.',
+        message:
+          'Код подтверждения отправлен. Пожалуйста, введите код, чтобы продолжить.',
         type: 'NON_CODE',
       });
     }
 
-    if (!code) throw new BadRequestException({ message: 'Вы не ввели код подтверждения.', type: 'NON_CODE' });
+    if (!code)
+      throw new BadRequestException({
+        message: 'Вы не ввели код подтверждения.',
+        type: 'NON_CODE',
+      });
 
-    if (codeInDatabase.code !== code) throw new BadRequestException({ message: 'Неверный код подтверждения.' });
+    if (codeInDatabase.code !== code)
+      throw new BadRequestException({ message: 'Неверный код подтверждения.' });
 
     await this.prismaService.codes.delete({ where: { number } });
   }
-
 }

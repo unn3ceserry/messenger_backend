@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post, Query } from '@nestjs/common';
 import {
   AccountService,
   type VisibilityField,
@@ -106,5 +106,10 @@ export class AccountController {
     @Body('whoCanSee') whoCanSee: WhoCanSeen,
   ) {
     return this.accountService.setVisibility(user, field, whoCanSee)
+  }
+
+  @Get('/get-user-data')
+  public async getUserData(@GetUser() user: User, @Query('username') username: string) {
+    return this.accountService.getUserData(user, username);
   }
 }

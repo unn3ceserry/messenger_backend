@@ -339,6 +339,77 @@ export class AccountService {
     return true;
   }
 
+  public async getUserData(user: User, username: string) {
+    if(!username) {
+      throw new BadRequestException('Введите имя пользователя.')
+    }
+    const userFind = await this.prismaService.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        phoneVisible: true,
+        emailVisible: true,
+        bioVisible: true,
+        avatarsVisible: true,
+        birthdayVisible: true,
+        firstName: true,
+        lastName: true,
+        number: true,
+        email: true,
+        bio: true,
+        avatars: true,
+        birthday: true,
+        contacts: { select: { usernameContact: true } }
+      }
+    });
+
+    if (!userFind) return null;
+
+    const isContact = userFind.contacts.some(
+      c => c.usernameContact === user.username
+    );
+
+    const result: Partial<User> = {
+      username: userFind.username,
+      firstName: userFind.firstName,
+      lastName: userFind.lastName,
+    };
+
+    if (userFind.phoneVisible === "ALL" ||
+      (userFind.phoneVisible === "CONTACTS" && isContact) ||
+      (userFind.phoneVisible === "I" && userFind.id === user.id)) {
+      result.number = userFind.number;
+    }
+
+    if (userFind.emailVisible === "ALL" ||
+      (userFind.emailVisible === "CONTACTS" && isContact) ||
+      (userFind.emailVisible === "I" && userFind.id === user.id)) {
+      result.email = userFind.email;
+    }
+
+    if (userFind.bioVisible === "ALL" ||
+      (userFind.bioVisible === "CONTACTS" && isContact) ||
+      (userFind.bioVisible === "I" && userFind.id === user.id)) {
+      result.bio = userFind.bio;
+    }
+
+    if (userFind.avatarsVisible === "ALL" ||
+      (userFind.avatarsVisible === "CONTACTS" && isContact) ||
+      (userFind.avatarsVisible === "I" && userFind.id === user.id)) {
+      result.avatars = userFind.avatars;
+    }
+
+    if (userFind.birthdayVisible === "ALL" ||
+      (userFind.birthdayVisible === "CONTACTS" && isContact) ||
+      (userFind.birthdayVisible === "I" && userFind.id === user.id)) {
+      result.birthday = userFind.birthday;
+    }
+
+    return result;
+  }
+
+
   // HELPERS
 
   public async existUser(username: string, number: string): Promise<boolean> {

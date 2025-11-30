@@ -1,26 +1,26 @@
 import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateAccountDto {
-  @IsNotEmpty({message: 'Номер не может быть пустым.'})
-  @IsString({message: 'Неверный формат номера.'})
+  @IsNotEmpty({ message: 'errors.account.number.isNotEmpty' })
+  @IsString({ message: 'errors.account.number.isString' })
   number: string;
 
-  @IsNotEmpty({message: 'Имя пользователя не может быть пустым.'})
-  @IsString({message: 'Неверный формат имени пользователя.'})
-  @MinLength(4, {message: 'Минимальная длинна имени пользователя не может быть меньше 4 символов.'})
+  @IsNotEmpty({ message: 'errors.account.username.isNotEmpty' })
+  @IsString({ message: 'errors.account.username.isString' })
+  @MinLength(4, { message: 'errors.account.username.minLength' })
   username: string;
 
-  @IsNotEmpty({message: 'Имя пользователя не может быть пустым.'})
-  @IsString({message: 'Неверный формат имени.'})
+  @IsNotEmpty({ message: 'errors.account.firstName.isNotEmpty' })
+  @IsString({ message: 'errors.account.firstName.isString' })
   firstName: string;
 
-  @IsNotEmpty({message: 'Фамилия пользователя не может быть пустой.'})
-  @IsString({message: 'Неверный формат фамилии.'})
+  @IsNotEmpty({ message: 'errors.account.lastName.isNotEmpty' })
+  @IsString({ message: 'errors.account.lastName.isString' })
   lastName: string;
 
   @IsOptional()
-  @IsString({message: 'Неверный формат кода подтверждения.'})
-  @MinLength(6, {message: 'Длинна пароля не должна быть меньше 6 символов.'})
-  @MaxLength(6, {message: 'Длинна пароля не должна быть больше 6 символов.'})
+  @IsString({ message: 'errors.account.code.isString' })
+  @MinLength(6, { message: 'errors.account.code.minLength' })
+  @MaxLength(6, { message: 'errors.account.code.maxLength' })
   code?: string;
 }

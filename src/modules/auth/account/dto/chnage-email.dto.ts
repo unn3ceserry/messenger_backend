@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ChangeEmailDto {
-  @IsNotEmpty({message: 'Почта не может быть пустой.'})
-  @IsString({message: 'Неверный формат почты.'})
+  @IsNotEmpty({message: 'errors.email.isNotEmpty'})
+  @IsEmail({}, {message: 'errors.email.isEmail'})
   newEmail: string;
 
   @IsOptional()
-  @IsString({message: 'Неверный формат облачного пароля.'})
+  @IsString({message: 'errors.password.passwordIsString'})
   cloudPassword?: string;
 }

@@ -1,17 +1,17 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MinLength, MaxLength } from 'class-validator';
 
 export class LoginAccountDto {
-  @IsNotEmpty({message: 'Номер не может быть пустым.'})
-  @IsString({message: 'Неверный формат номера.'})
+  @IsNotEmpty({ message: 'errors.account.number.isNotEmpty' })
+  @IsString({ message: 'errors.account.number.isString' })
   number: string;
 
   @IsOptional()
-  @IsString({message: 'Неверный формат облачного пароля.'})
+  @IsString({ message: 'errors.password.passwordIsString' })
   cloudPassword?: string;
 
   @IsOptional()
-  @IsString({message: 'Неверный формат кода подтверждения.'})
-  @MinLength(6, {message: 'Длинна пароля не должна быть меньше 6 символов.'})
-  @MaxLength(6, {message: 'Длинна пароля не должна быть больше 6 символов.'})
+  @IsString({ message: 'errors.account.code.isString' })
+  @MinLength(6, { message: 'errors.account.code.minLength' })
+  @MaxLength(6, { message: 'errors.account.code.maxLength' })
   code?: string;
 }

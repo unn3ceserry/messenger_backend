@@ -15,7 +15,6 @@ import { AccountService } from '@/src/modules/auth/account/account.service';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata';
 import { RedisService } from '@/src/core/redis/redis.service';
 import type { Request } from 'express';
-import { Twilio } from 'twilio';
 
 @Injectable()
 export class SessionService {

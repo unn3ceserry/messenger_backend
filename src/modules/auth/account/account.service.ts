@@ -514,7 +514,5 @@ export class AccountService {
 
     if (codeInDatabase.code !== code)
       throw new BadRequestException({ message: 'Неверный код подтверждения.' });
-
-    await this.prismaService.codes.delete({ where: { number } });
   }
 }

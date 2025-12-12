@@ -37,7 +37,7 @@ export class SessionController {
     return this.sessionService.findCurrent(req);
   }
 
-  @Delete('/clear')
+  @Delete('/remove')
   public async remove(@Req() req: Request, @Body('id') id: string) {
     return this.sessionService.remove(req, id);
   }
@@ -47,7 +47,7 @@ export class SessionController {
     return this.sessionService.removeAll(req);
   }
 
-  @Delete('/coockie/clear')
+  @Get('/coockie/clear')
   public async clearCookie(@Req() req: Request) {
     return this.sessionService.clearCookie(req);
   }

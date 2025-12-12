@@ -42,7 +42,14 @@ export class SessionService {
         throw new UnauthorizedException('Неверный облачный пароль.');
       }
     }
-    await this.prismaService.codes.delete({ where: { number } });
+    const codes = await this.prismaService.codes.findMany({
+      where: { number },
+    });
+    if (codes) {
+      await this.prismaService.codes.deleteMany({
+        where: { number },
+      });
+    }
 
     const metadata = getSessionMetadata(req, userAgent);
     return new Promise((resolve, reject) => {
@@ -70,7 +77,14 @@ export class SessionService {
       const user = await this.accountService.createAccount(dto);
 
       const metadata = getSessionMetadata(req, userAgent);
-
+      const codes = await this.prismaService.codes.findMany({
+        where: { number: dto.number },
+      });
+      if (codes) {
+        await this.prismaService.codes.deleteMany({
+          where: { number: dto.number },
+        });
+      }
       return new Promise((resolve, reject) => {
         req.session.userId = user.id;
         req.session.createdAt = new Date();
@@ -206,6 +220,14 @@ export class SessionService {
   }
 
   public async sendOtpToMobile(number: string) {
+    const codes = await this.prismaService.codes.findMany({
+      where: { number },
+    });
+    if (codes) {
+      await this.prismaService.codes.deleteMany({
+        where: { number },
+      });
+    }
     return this.accountService.sendOtpToMobile(number);
   }
 

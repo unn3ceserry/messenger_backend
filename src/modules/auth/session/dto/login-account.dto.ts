@@ -1,17 +1,20 @@
-import { IsNotEmpty, IsOptional, IsString, MinLength, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MinLength, MaxLength, Matches } from 'class-validator';
 
 export class LoginAccountDto {
-  @IsNotEmpty({ message: 'errors.account.number.isNotEmpty' })
-  @IsString({ message: 'errors.account.number.isString' })
+  @IsNotEmpty({ message: 'Номер телефона обязателен для заполнения.' })
+  @IsString({ message: 'Номер телефона должен быть строкой.' })
+  @Matches(/^\d{10,15}$/, { message: 'Номер телефона должен содержать только цифры и быть от 10 до 15 символов.' })
   number: string;
 
   @IsOptional()
-  @IsString({ message: 'errors.password.passwordIsString' })
+  @IsString({ message: 'Пароль для облака должен быть строкой.' })
+  @MinLength(6, { message: 'Пароль для облака должен содержать минимум 6 символов.' })
   cloudPassword?: string;
 
   @IsOptional()
-  @IsString({ message: 'errors.account.code.isString' })
-  @MinLength(6, { message: 'errors.account.code.minLength' })
-  @MaxLength(6, { message: 'errors.account.code.maxLength' })
+  @IsString({ message: 'Код должен быть строкой.' })
+  @MinLength(6, { message: 'Код должен содержать ровно 6 символов.' })
+  @MaxLength(6, { message: 'Код должен содержать ровно 6 символов.' })
+  @Matches(/^\d{6}$/, { message: 'Код должен состоять только из цифр.' })
   code?: string;
 }

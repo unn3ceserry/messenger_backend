@@ -1,26 +1,31 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, Matches } from 'class-validator';
 
 export class CreateAccountDto {
-  @IsNotEmpty({ message: 'errors.account.number.isNotEmpty' })
-  @IsString({ message: 'errors.account.number.isString' })
+  @IsNotEmpty({ message: 'Номер телефона обязателен для заполнения.' })
+  @IsString({ message: 'Номер телефона должен быть строкой.' })
+  @Matches(/^\d{10,15}$/, { message: 'Номер телефона должен содержать только цифры и быть от 10 до 15 символов.' })
   number: string;
 
-  @IsNotEmpty({ message: 'errors.account.username.isNotEmpty' })
-  @IsString({ message: 'errors.account.username.isString' })
-  @MinLength(4, { message: 'errors.account.username.minLength' })
+  @IsNotEmpty({ message: 'Имя пользователя обязательно для заполнения.' })
+  @IsString({ message: 'Имя пользователя должно быть строкой.' })
+  @MinLength(4, { message: 'Имя пользователя должно содержать минимум 4 символа.' })
+  @MaxLength(20, { message: 'Имя пользователя не может превышать 20 символов.' })
   username: string;
 
-  @IsNotEmpty({ message: 'errors.account.firstName.isNotEmpty' })
-  @IsString({ message: 'errors.account.firstName.isString' })
+  @IsNotEmpty({ message: 'Имя обязательно для заполнения.' })
+  @IsString({ message: 'Имя должно быть строкой.' })
+  @MaxLength(50, { message: 'Имя не может превышать 50 символов.' })
   firstName: string;
 
-  @IsNotEmpty({ message: 'errors.account.lastName.isNotEmpty' })
-  @IsString({ message: 'errors.account.lastName.isString' })
+  @IsNotEmpty({ message: 'Фамилия обязательна для заполнения.' })
+  @IsString({ message: 'Фамилия должна быть строкой.' })
+  @MaxLength(50, { message: 'Фамилия не может превышать 50 символов.' })
   lastName: string;
 
   @IsOptional()
-  @IsString({ message: 'errors.account.code.isString' })
-  @MinLength(6, { message: 'errors.account.code.minLength' })
-  @MaxLength(6, { message: 'errors.account.code.maxLength' })
+  @IsString({ message: 'Код должен быть строкой.' })
+  @MinLength(6, { message: 'Код должен содержать ровно 6 символов.' })
+  @MaxLength(6, { message: 'Код должен содержать ровно 6 символов.' })
+  @Matches(/^\d{6}$/, { message: 'Код должен состоять только из цифр.' })
   code?: string;
 }

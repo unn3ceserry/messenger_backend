@@ -28,7 +28,7 @@ export class SessionService {
     const { number, cloudPassword, code } = dto;
     const user = await this.existUser(number);
 
-    // await this.accountService.verifyOtpCode(number, code);
+    await this.accountService.verifyOtpCode(number, code);
 
     if (user.cloudPassword) {
       if (!cloudPassword) {

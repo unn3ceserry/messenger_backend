@@ -36,6 +36,12 @@ export class AccountService {
   public async createAccount(dto: CreateAccountDto): Promise<User> {
     const { lastName, firstName, username, number, code } = dto;
     await this.verifyOtpCode(number, code);
+    if (!lastName || !username || !firstName) {
+      throw new BadRequestException({
+        message: 'Для регистрации так же нужно заполнить информацию.',
+        type: 'NON_INFO',
+      });
+    }
     await this.existUser(username, number);
     const user = await this.prismaService.user.create({
       data: {
@@ -340,8 +346,8 @@ export class AccountService {
   }
 
   public async getUserData(user: User, username: string) {
-    if(!username) {
-      throw new BadRequestException('Введите имя пользователя.')
+    if (!username) {
+      throw new BadRequestException('Введите имя пользователя.');
     }
     const userFind = await this.prismaService.user.findUnique({
       where: { username },
@@ -360,14 +366,14 @@ export class AccountService {
         bio: true,
         avatars: true,
         birthday: true,
-        contacts: { select: { usernameContact: true } }
-      }
+        contacts: { select: { usernameContact: true } },
+      },
     });
 
     if (!userFind) return null;
 
     const isContact = userFind.contacts.some(
-      c => c.usernameContact === user.username
+      (c) => c.usernameContact === user.username,
     );
 
     const result: Partial<User> = {
@@ -376,39 +382,48 @@ export class AccountService {
       lastName: userFind.lastName,
     };
 
-    if (userFind.phoneVisible === "ALL" ||
-      (userFind.phoneVisible === "CONTACTS" && isContact) ||
-      (userFind.phoneVisible === "I" && userFind.id === user.id)) {
+    if (
+      userFind.phoneVisible === 'ALL' ||
+      (userFind.phoneVisible === 'CONTACTS' && isContact) ||
+      (userFind.phoneVisible === 'I' && userFind.id === user.id)
+    ) {
       result.number = userFind.number;
     }
 
-    if (userFind.emailVisible === "ALL" ||
-      (userFind.emailVisible === "CONTACTS" && isContact) ||
-      (userFind.emailVisible === "I" && userFind.id === user.id)) {
+    if (
+      userFind.emailVisible === 'ALL' ||
+      (userFind.emailVisible === 'CONTACTS' && isContact) ||
+      (userFind.emailVisible === 'I' && userFind.id === user.id)
+    ) {
       result.email = userFind.email;
     }
 
-    if (userFind.bioVisible === "ALL" ||
-      (userFind.bioVisible === "CONTACTS" && isContact) ||
-      (userFind.bioVisible === "I" && userFind.id === user.id)) {
+    if (
+      userFind.bioVisible === 'ALL' ||
+      (userFind.bioVisible === 'CONTACTS' && isContact) ||
+      (userFind.bioVisible === 'I' && userFind.id === user.id)
+    ) {
       result.bio = userFind.bio;
     }
 
-    if (userFind.avatarsVisible === "ALL" ||
-      (userFind.avatarsVisible === "CONTACTS" && isContact) ||
-      (userFind.avatarsVisible === "I" && userFind.id === user.id)) {
+    if (
+      userFind.avatarsVisible === 'ALL' ||
+      (userFind.avatarsVisible === 'CONTACTS' && isContact) ||
+      (userFind.avatarsVisible === 'I' && userFind.id === user.id)
+    ) {
       result.avatars = userFind.avatars;
     }
 
-    if (userFind.birthdayVisible === "ALL" ||
-      (userFind.birthdayVisible === "CONTACTS" && isContact) ||
-      (userFind.birthdayVisible === "I" && userFind.id === user.id)) {
+    if (
+      userFind.birthdayVisible === 'ALL' ||
+      (userFind.birthdayVisible === 'CONTACTS' && isContact) ||
+      (userFind.birthdayVisible === 'I' && userFind.id === user.id)
+    ) {
       result.birthday = userFind.birthday;
     }
 
     return result;
   }
-
 
   // HELPERS
 

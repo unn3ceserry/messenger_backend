@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -35,6 +36,7 @@ export class AccountService {
 
   public async createAccount(dto: CreateAccountDto): Promise<User> {
     const { lastName, firstName, username, number, code } = dto;
+    await this.existUser(username, number);
     await this.verifyOtpCode(number, code);
     if (!lastName || !username || !firstName) {
       throw new BadRequestException({
@@ -42,7 +44,6 @@ export class AccountService {
         type: 'NON_INFO',
       });
     }
-    await this.existUser(username, number);
     const user = await this.prismaService.user.create({
       data: {
         username,
@@ -60,18 +61,20 @@ export class AccountService {
       where: { id: user.id },
     });
     if (!foundUser) {
-      throw new UnauthorizedException('Пользователь не авторизирован.');
+      throw new UnauthorizedException({
+        message: 'Пользователь не авторизирован.',
+      });
     }
     return foundUser;
   }
 
   public async setPassword(user: User, dto: SetPasswordDto): Promise<boolean> {
     if (user.cloudPassword) {
-      throw new ConflictException('Вы уже используете пароль.');
+      throw new ConflictException({ message: 'Вы уже используете пароль.' });
     }
     const { password, confirmPassword } = dto;
     if (password !== confirmPassword) {
-      throw new ConflictException('Пароль отличается от первого.');
+      throw new ConflictException({ message: 'Пароль отличается от первого.' });
     }
     const hashPassword = await hash(password);
     await this.prismaService.user.update({
@@ -90,12 +93,12 @@ export class AccountService {
     dto: ChangePasswordDto,
   ): Promise<boolean> {
     if (!user.cloudPassword) {
-      throw new ConflictException('Вы не используете пароль.');
+      throw new ConflictException({ message: 'Вы не используете пароль.' });
     }
     const { password, newPassword } = dto;
     const verifyPassword = await verify(user.cloudPassword, password);
     if (!verifyPassword) {
-      throw new ConflictException('Неверный пароль.');
+      throw new ConflictException({ message: 'Неверный пароль.' });
     }
     const hashPassword = await hash(newPassword);
     await this.prismaService.user.update({
@@ -111,11 +114,11 @@ export class AccountService {
 
   public async removePassword(user: User, password: string): Promise<boolean> {
     if (!user.cloudPassword) {
-      throw new ConflictException('Вы не используете пароль.');
+      throw new ConflictException({ message: 'Вы не используете пароль.' });
     }
     const verifyPassword = await verify(user.cloudPassword, password);
     if (!verifyPassword) {
-      throw new ConflictException('Неверный пароль.');
+      throw new ConflictException({ message: 'Неверный пароль.' });
     }
     await this.prismaService.user.update({
       where: {
@@ -130,7 +133,9 @@ export class AccountService {
 
   public async addEmail(user: User, email: string): Promise<boolean> {
     if (user.email) {
-      throw new ConflictException('К аккаунту уже привязана почта.');
+      throw new ConflictException({
+        message: 'К аккаунту уже привязана почта.',
+      });
     }
     await this.prismaService.user.update({
       where: {
@@ -154,7 +159,9 @@ export class AccountService {
       }
       const isValidPassword = await verify(user.cloudPassword, cloudPassword);
       if (!isValidPassword) {
-        throw new UnauthorizedException('Неверный облачный пароль.');
+        throw new UnauthorizedException({
+          message: 'Неверный облачный пароль.',
+        });
       }
     }
 
@@ -227,7 +234,7 @@ export class AccountService {
     lastname: string,
   ): Promise<boolean> {
     if (lastname.length < 2 || firstname.length < 2) {
-      throw new ConflictException('Минимальная длинна 2.');
+      throw new ConflictException({ message: 'Минимальная длинна 2.' });
     }
     await this.prismaService.user.update({
       where: {
@@ -243,9 +250,10 @@ export class AccountService {
 
   public async updateUsername(user: User, username: string): Promise<boolean> {
     if (username.length < 4) {
-      throw new ConflictException(
-        'Минимальная длинна имени пользователя не может быть меньше 4 символов.',
-      );
+      throw new ConflictException({
+        message:
+          'Минимальная длинна имени пользователя не может быть меньше 4 символов.',
+      });
     }
     const existName = await this.prismaService.user.findUnique({
       where: {
@@ -254,7 +262,9 @@ export class AccountService {
     });
 
     if (existName) {
-      throw new ConflictException('Это имя пользователя уже занято.');
+      throw new ConflictException({
+        message: 'Это имя пользователя уже занято.',
+      });
     }
 
     await this.prismaService.user.update({
@@ -276,14 +286,18 @@ export class AccountService {
     });
 
     if (!userFind) {
-      throw new NotFoundException('Пользователь не найден.');
+      throw new NotFoundException({ message: 'Пользователь не найден.' });
     }
 
     if (user.blockedUsers.includes(id)) {
-      throw new ConflictException('Пользователь уже заблокирован.');
+      throw new ConflictException({
+        message: 'Пользователь уже заблокирован.',
+      });
     }
     if (user.id === id) {
-      throw new ConflictException('Вы не можете заблокировать себя.');
+      throw new ConflictException({
+        message: 'Вы не можете заблокировать себя.',
+      });
     }
 
     await this.prismaService.user.update({
@@ -304,13 +318,15 @@ export class AccountService {
       },
     });
     if (!userFind) {
-      throw new NotFoundException('Пользователь не найден.');
+      throw new NotFoundException({ message: 'Пользователь не найден.' });
     }
     if (!user.blockedUsers.includes(id)) {
-      throw new ConflictException('Пользователь не заблокирован.');
+      throw new ConflictException({ message: 'Пользователь не заблокирован.' });
     }
     if (user.id === id) {
-      throw new ConflictException('Вы не можете заблокировать себя.');
+      throw new ConflictException({
+        message: 'Вы не можете заблокировать себя.',
+      });
     }
     await this.prismaService.user.update({
       where: {
@@ -331,10 +347,10 @@ export class AccountService {
     whoCanSee: WhoCanSeen,
   ): Promise<boolean> {
     if (!WhoCanSeen[whoCanSee] || !VisibilityField[field]) {
-      throw new ConflictException('Неверный тип.');
+      throw new ConflictException({ message: 'Неверный тип.' });
     }
     if (!Object.values(WhoCanSeen).includes(whoCanSee)) {
-      throw new ConflictException('Неверный тип WhoCanSeen.');
+      throw new ConflictException({ message: 'Неверный тип WhoCanSeen.' });
     }
 
     await this.prismaService.user.update({
@@ -347,7 +363,7 @@ export class AccountService {
 
   public async getUserData(user: User, username: string) {
     if (!username) {
-      throw new BadRequestException('Введите имя пользователя.');
+      throw new BadRequestException({ message: 'Введите имя пользователя.' });
     }
     const userFind = await this.prismaService.user.findUnique({
       where: { username },
@@ -438,23 +454,25 @@ export class AccountService {
     });
 
     if (user) {
-      throw new ConflictException(
-        'Пользователь с такими данными уже существует.',
-      );
+      throw new ConflictException({
+        message: 'Пользователь с такими данными уже существует.',
+      });
     }
     return true;
   }
 
-  async sendOtpToMobile(phoneNumber: string): Promise<string> {
+  async sendOtpToMobile(phoneNumber: string) {
     const otp = this.generateOtp();
     const formattedNumber = `+${phoneNumber.replace(/\D/g, '')}`;
     if (!/^\+\d{10,15}$/.test(formattedNumber)) {
-      throw new BadRequestException('Неверный формат номера телефона.');
+      throw new BadRequestException({
+        message: 'Неверный формат номера телефона.',
+      });
     }
     if (process.env.TWILIO_PHONE_NUMBER === phoneNumber) {
-      throw new BadRequestException(
-        'Вы не можете отправить SMS на этот номер.',
-      );
+      throw new BadRequestException({
+        message: 'Вы не можете отправить SMS на этот номер.',
+      });
     }
     try {
       const isExistCode = await this.prismaService.codes.findUnique({
@@ -484,8 +502,13 @@ export class AccountService {
 
       return otp;
     } catch (error) {
-      console.error('Error sending OTP via SMS', error);
-      throw new Error('Failed to send OTP via SMS');
+      if (error?.code === 21211) {
+        throw new BadRequestException({
+          message: 'Неверный номер телефона.',
+          details: error.message,
+          twilioErrorCode: error.code,
+        });
+      }
     }
   }
 
@@ -523,7 +546,7 @@ export class AccountService {
 
     if (!code)
       throw new BadRequestException({
-        message: 'Вы не ввели код подтверждения.',
+        message: 'Введите код подтверждения.',
         type: 'NON_CODE',
       });
 

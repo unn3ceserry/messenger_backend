@@ -39,7 +39,7 @@ export class SessionService {
       }
       const isValidPassword = await verify(user.cloudPassword, cloudPassword);
       if (!isValidPassword) {
-        throw new UnauthorizedException('Неверный облачный пароль.');
+        throw new UnauthorizedException({message: 'Неверный облачный пароль.'});
       }
     }
     const codes = await this.prismaService.codes.findMany({
@@ -93,7 +93,7 @@ export class SessionService {
         req.session.save((err) => {
           if (err) {
             return reject(
-              new InternalServerErrorException('Не удалось сохранить сессию.'),
+              new InternalServerErrorException({message: 'Не удалось сохранить сессию.'}),
             );
           }
           resolve(user);
@@ -109,7 +109,7 @@ export class SessionService {
       req.session.destroy((err) => {
         if (err) {
           return reject(
-            new InternalServerErrorException('Не удалось завершить сессию.'),
+            new InternalServerErrorException({message: 'Не удалось завершить сессию.'}),
           );
         }
         req.res?.clearCookie('session');
@@ -122,7 +122,7 @@ export class SessionService {
     const userId = req.session.userId;
 
     if (!userId) {
-      throw new NotFoundException('Пользователь не обнаружен в сессии.');
+      throw new NotFoundException({message: 'Пользователь не обнаружен в сессии.'});
     }
 
     const keys = await this.redisService.keys('session:*');
@@ -160,7 +160,7 @@ export class SessionService {
     const sessionId = req.session.id;
     const sessionData = await this.redisService.get(`session:${sessionId}`);
     if (!sessionData) {
-      throw new NotFoundException('Сессия не найдена.');
+      throw new NotFoundException({message: 'Сессия не найдена.'});
     }
     const session = JSON.parse(sessionData);
     return {
@@ -176,7 +176,7 @@ export class SessionService {
 
   public async remove(req: Request, id: string) {
     if (req.session.id === id) {
-      throw new ConflictException('Текущую сессию удалить нельзя.');
+      throw new ConflictException({message: 'Текущую сессию удалить нельзя.'});
     }
 
     await this.redisService.del(`session:${id}`);
@@ -242,7 +242,7 @@ export class SessionService {
 
     if (!user) {
       throw new NotFoundException(
-        'Пользователя с такими данными не существует.',
+        {message: 'Пользователя с такими данными не существует.'}
       );
     }
     return user;

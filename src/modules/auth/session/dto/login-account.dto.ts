@@ -15,6 +15,5 @@ export class LoginAccountDto {
   @IsString({ message: 'Код должен быть строкой.' })
   @MinLength(6, { message: 'Код должен содержать ровно 6 символов.' })
   @MaxLength(6, { message: 'Код должен содержать ровно 6 символов.' })
-  @Matches(/^\d{6}$/, { message: 'Код должен состоять только из цифр.' })
   code?: string;
 }

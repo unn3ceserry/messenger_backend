@@ -14,6 +14,7 @@ import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto'
 import { hash, verify } from 'argon2';
 import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
 import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
+import { CompleteAccountDto } from './dto/user-complete.dto';
 
 export enum VisibilityField {
   Phone = 'phoneVisible',
@@ -337,6 +338,31 @@ export class AccountService {
       },
     });
     return true;
+  }
+
+  public async setUserCompleteDate(
+    user: User,
+    dto: CompleteAccountDto,
+  ): Promise<User> {
+    const { birthday, email, cloudPassword } = dto;
+    const exists = await this.prismaService.user.findUnique({
+      where: { email },
+    });
+
+    if (exists && exists.id !== user.id) {
+      throw new ConflictException({message: 'Данная почта уже занята.'});
+    }
+
+    return await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        birthday: birthday ? birthday : user.birthday,
+        email: email ? email : user.email,
+        cloudPassword: cloudPassword ? cloudPassword : user.cloudPassword,
+      },
+    });
   }
 
   // VISIBLE SETTINGS

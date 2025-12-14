@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   AccountService,
   type VisibilityField,
@@ -8,6 +16,7 @@ import type { User, WhoCanSeen } from '@/prisma/generated/prisma';
 import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
 import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
 import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
+import { CompleteAccountDto } from './dto/user-complete.dto';
 
 @Controller('account')
 export class AccountController {
@@ -105,11 +114,22 @@ export class AccountController {
     @GetUser() user: User,
     @Body('whoCanSee') whoCanSee: WhoCanSeen,
   ) {
-    return this.accountService.setVisibility(user, field, whoCanSee)
+    return this.accountService.setVisibility(user, field, whoCanSee);
   }
 
   @Get('/get-user-data')
-  public async getUserData(@GetUser() user: User, @Query('username') username: string) {
+  public async getUserData(
+    @GetUser() user: User,
+    @Query('username') username: string,
+  ) {
     return this.accountService.getUserData(user, username);
+  }
+
+  @Post('/set-complete-data')
+  public async setUserCompleteDate(
+    @Body() dto: CompleteAccountDto,
+    @GetUser() user: User,
+  ) {
+    return this.accountService.setUserCompleteDate(user, dto);
   }
 }

@@ -350,9 +350,12 @@ export class AccountService {
     });
 
     if (exists && exists.id !== user.id) {
-      throw new ConflictException({message: 'Данная почта уже занята.'});
+      throw new ConflictException({ message: 'Данная почта уже занята.' });
     }
-
+    let hashPassword;
+    if (cloudPassword) {
+      hashPassword = await hash(cloudPassword);
+    }
     return await this.prismaService.user.update({
       where: {
         id: user.id,
@@ -360,7 +363,7 @@ export class AccountService {
       data: {
         birthday: birthday ? birthday : user.birthday,
         email: email ? email : user.email,
-        cloudPassword: cloudPassword ? cloudPassword : user.cloudPassword,
+        cloudPassword: cloudPassword ? hashPassword : user.cloudPassword,
       },
     });
   }

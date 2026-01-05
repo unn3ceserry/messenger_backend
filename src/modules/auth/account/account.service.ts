@@ -38,7 +38,7 @@ export class AccountService {
   public async createAccount(dto: CreateAccountDto): Promise<User> {
     const { lastName, firstName, username, number, code } = dto;
     await this.existUser(username, number);
-    await this.verifyOtpCode(number, code);
+    // await this.verifyOtpCode(number, code);
     if (!lastName || !username || !firstName) {
       throw new BadRequestException({
         message: 'Для регистрации так же нужно заполнить информацию.',

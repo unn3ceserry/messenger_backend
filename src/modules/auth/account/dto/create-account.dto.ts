@@ -1,15 +1,33 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, Matches } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  Matches,
+} from 'class-validator';
 
 export class CreateAccountDto {
   @IsNotEmpty({ message: 'Номер телефона обязателен для заполнения.' })
   @IsString({ message: 'Номер телефона должен быть строкой.' })
-  @Matches(/^\d{10,15}$/, { message: 'Номер телефона должен содержать только цифры и быть от 10 до 15 символов.' })
+  @Matches(/^\d{10,15}$/, {
+    message:
+      'Номер телефона должен содержать только цифры и быть от 10 до 15 символов.',
+  })
   number: string;
 
   @IsOptional()
   @IsString({ message: 'Имя пользователя должно быть строкой.' })
-  @MinLength(4, { message: 'Имя пользователя должно содержать минимум 4 символа.' })
-  @MaxLength(20, { message: 'Имя пользователя не может превышать 20 символов.' })
+  @MinLength(4, {
+    message: 'Имя пользователя должно содержать минимум 4 символа.',
+  })
+  @MaxLength(20, {
+    message: 'Имя пользователя не может превышать 20 символов.',
+  })
+  @Matches(/^[a-zA-Z0-9]+$/, {
+    message:
+      'Имя пользователя может содержать только английские буквы и цифры.',
+  })
   username: string;
 
   @IsOptional()

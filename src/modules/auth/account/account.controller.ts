@@ -6,6 +6,8 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   AccountService,
@@ -17,6 +19,7 @@ import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto'
 import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
 import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
 import { CompleteAccountDto } from './dto/user-complete.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('account')
 export class AccountController {
@@ -131,5 +134,11 @@ export class AccountController {
     @GetUser() user: User,
   ) {
     return this.accountService.setUserCompleteDate(user, dto);
+  }
+
+  @UseInterceptors(FileInterceptor('file'))
+  @Post('/feat-avatar')
+  public async featAvatar(@GetUser() user: User, @UploadedFile() file: Express.Multer.File) {
+    return this.accountService.featAvatar(user, file)
   }
 }

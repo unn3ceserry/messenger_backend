@@ -15,7 +15,7 @@ model User {
   number   String  @unique
   username String  @unique
 
-  avatars  String?
+  avatars  String[]
   bio      String?
   birthday DateTime?
 

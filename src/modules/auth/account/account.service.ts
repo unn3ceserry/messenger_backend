@@ -15,6 +15,7 @@ import { hash, verify } from 'argon2';
 import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
 import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
 import { CompleteAccountDto } from './dto/user-complete.dto';
+import { FilesService } from '../../files/files.service';
 
 export enum VisibilityField {
   Phone = 'phoneVisible',
@@ -28,7 +29,10 @@ export enum VisibilityField {
 export class AccountService {
   private readonly twilioClient: Twilio;
 
-  constructor(private readonly prismaService: PrismaService) {
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly filesService: FilesService,
+  ) {
     this.twilioClient = new Twilio(
       process.env.TWILIO_ACCOUNT_SID,
       process.env.TWILIO_AUTH_TOKEN,
@@ -55,6 +59,22 @@ export class AccountService {
     });
 
     return user;
+  }
+
+  public async featAvatar(
+    user: User,
+    file: Express.Multer.File,
+  ): Promise<{ url: string }> {
+    const avatar = await this.filesService.upload(file);
+    await this.prismaService.user.update({
+      where: { username: user.username },
+      data: {
+        avatars: {
+          push: avatar.url,
+        },
+      },
+    });
+    return {url: avatar.url}
   }
 
   public async getMe(user: User): Promise<User> {

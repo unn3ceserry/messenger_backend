@@ -4,7 +4,7 @@ import DeviceDetector = require('device-detector-js');
 import {lookup} from 'geoip-lite'
 import * as countries from 'i18n-iso-countries';
 
-countries.registerLocale(require('i18n-iso-countries/langs/ru.json'));
+countries.registerLocale(require('i18n-iso-countries/langs/en.json'));
 
 export const getSessionMetadata = (req: Request, userAgent: string): SessionMetadata => {
   const ip = process.env.NODE_ENV === 'dev'

@@ -74,7 +74,7 @@ export class AccountService {
         },
       },
     });
-    return {url: avatar.url}
+    return { url: avatar.url };
   }
 
   public async getMe(user: User): Promise<User> {
@@ -270,10 +270,10 @@ export class AccountService {
   }
 
   public async updateUsername(user: User, username: string): Promise<boolean> {
-    if (username.length < 4) {
+    if (username.length < 5) {
       throw new ConflictException({
         message:
-          'Минимальная длинна имени пользователя не может быть меньше 4 символов.',
+          'Минимальная длинна имени пользователя не может быть меньше 5 символов.',
       });
     }
     const existName = await this.prismaService.user.findUnique({
@@ -281,6 +281,13 @@ export class AccountService {
         username,
       },
     });
+
+    if (!/^[a-z0-9]+$/.test(username)) {
+      throw new ConflictException({
+        message:
+          'Имя пользователя может содержать только маленькие буквы a–z и цифры 0–9.',
+      });
+    }
 
     if (existName) {
       throw new ConflictException({

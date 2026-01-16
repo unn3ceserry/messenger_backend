@@ -46,9 +46,8 @@ export class AccountController {
   @Delete('/remove-password')
   public async removePassword(
     @GetUser() user: User,
-    @Body('password') password: string,
   ) {
-    return this.accountService.removePassword(user, password);
+    return this.accountService.removePassword(user);
   }
 
   @Post('/set-email')

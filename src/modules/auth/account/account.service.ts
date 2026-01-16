@@ -133,14 +133,11 @@ export class AccountService {
     return true;
   }
 
-  public async removePassword(user: User, password: string): Promise<boolean> {
+  public async removePassword(user: User): Promise<boolean> {
     if (!user.cloudPassword) {
       throw new ConflictException({ message: 'Вы не используете пароль.' });
     }
-    const verifyPassword = await verify(user.cloudPassword, password);
-    if (!verifyPassword) {
-      throw new ConflictException({ message: 'Неверный пароль.' });
-    }
+ 
     await this.prismaService.user.update({
       where: {
         id: user.id,

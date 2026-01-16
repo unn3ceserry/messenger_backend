@@ -417,12 +417,12 @@ export class AccountService {
     return true;
   }
 
-  public async getUserData(user: User, username: string) {
-    if (!username) {
-      throw new BadRequestException({ message: 'Введите имя пользователя.' });
+  public async getUserData(user: User, id: string) {
+    if (!id) {
+      throw new BadRequestException({ message: 'Введите айди пользователя.' });
     }
     const userFind = await this.prismaService.user.findUnique({
-      where: { username },
+      where: { id },
       select: {
         id: true,
         username: true,

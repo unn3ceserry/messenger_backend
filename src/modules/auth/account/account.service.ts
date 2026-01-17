@@ -137,7 +137,7 @@ export class AccountService {
     if (!user.cloudPassword) {
       throw new ConflictException({ message: 'Вы не используете пароль.' });
     }
- 
+
     await this.prismaService.user.update({
       where: {
         id: user.id,
@@ -396,19 +396,20 @@ export class AccountService {
 
   public async setVisibility(
     user: User,
-    field: VisibilityField,
-    whoCanSee: WhoCanSeen,
+    field: string,
+    whoCanSee: string,
   ): Promise<boolean> {
-    if (!WhoCanSeen[whoCanSee] || !VisibilityField[field]) {
-      throw new ConflictException({ message: 'Неверный тип.' });
-    }
-    if (!Object.values(WhoCanSeen).includes(whoCanSee)) {
+    if (!Object.values(WhoCanSeen).includes(whoCanSee as WhoCanSeen)) {
       throw new ConflictException({ message: 'Неверный тип WhoCanSeen.' });
+    }
+
+    if (!Object.values(VisibilityField).includes(field as VisibilityField)) {
+      throw new ConflictException({ message: 'Неверный тип field.' });
     }
 
     await this.prismaService.user.update({
       where: { id: user.id },
-      data: { [VisibilityField[field]]: whoCanSee },
+      data: { [field]: whoCanSee },
     });
 
     return true;

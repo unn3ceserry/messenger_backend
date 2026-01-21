@@ -415,12 +415,13 @@ export class AccountService {
     return true;
   }
 
-  public async getUserData(user: User, id: string) {
-    if (!id) {
+  public async getUserData(user: User, id?: string, username?: string) {
+    if (!id && !username) {
       throw new BadRequestException({ message: 'Введите айди пользователя.' });
     }
+    const whereClause = id ? { id } : { username };
     const userFind = await this.prismaService.user.findUnique({
-      where: { id },
+      where: whereClause,
       select: {
         id: true,
         username: true,

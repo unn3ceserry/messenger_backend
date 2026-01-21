@@ -122,9 +122,10 @@ export class AccountController {
   @Get('/get-user-data')
   public async getUserData(
     @GetUser() user: User,
-    @Query('id') id: string,
+    @Query('id') id?: string,
+    @Query('username') username?: string,
   ) {
-    return this.accountService.getUserData(user, id);
+    return this.accountService.getUserData(user, id, username);
   }
 
   @Post('/set-complete-data')

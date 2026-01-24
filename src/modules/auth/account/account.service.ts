@@ -500,8 +500,8 @@ export class AccountService {
 
     const result: Partial<User> = {
       username: userFind.username,
-      firstName: userFind.firstName,
-      lastName: userFind.lastName,
+      firstName: isContact ? contact.firstNameContact : userFind.firstName,
+      lastName: isContact ? contact.lastNameContact : userFind.lastName,
     };
 
     if (

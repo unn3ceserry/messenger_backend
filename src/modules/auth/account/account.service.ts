@@ -224,6 +224,9 @@ export class AccountService {
   }
 
   public async setBio(user: User, bio: string): Promise<boolean> {
+    if(bio.length > 70) {
+      throw new ConflictException({message: 'Максимаьная длинна 70 символов.'})
+    }
     await this.prismaService.user.update({
       where: {
         id: user.id,

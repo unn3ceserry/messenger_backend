@@ -128,6 +128,14 @@ export class AccountController {
     return this.accountService.getUserData(user, id, username);
   }
 
+  @Get('/is-my-contact')
+  public async isMyContact(
+    @GetUser() user: User,
+    @Query('username') username: string,
+  ) {
+    return this.accountService.isMyContact(user, username);
+  }
+
   @Post('/set-complete-data')
   public async setUserCompleteDate(
     @Body() dto: CompleteAccountDto,

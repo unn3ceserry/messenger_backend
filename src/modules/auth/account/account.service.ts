@@ -417,29 +417,25 @@ export class AccountService {
   }
 
   public async isMyContact(user: User, username: string): Promise<boolean> {
-    const myData = await this.prismaService.user.findUnique({
-      where: { id: user.id },
-      include: { contacts: true },
+    const contact = await this.prismaService.userContacts.findFirst({
+      where: {
+        username: user.username,
+        usernameContact: username,
+      },
     });
 
-    if (!myData) {
-      throw new NotFoundException({ message: 'Пользователь не найден.' });
-    }
-    const isContact = myData.contacts.some(
-      (c) => c.usernameContact === username,
-    );
-    return isContact;
+    return !!contact;
   }
 
   public async getUserData(user: User, id?: string, username?: string) {
     if (!id && !username) {
       throw new BadRequestException({ message: 'Введите айди пользователя.' });
     }
-    if (user.username === username || user.id === id) {
-      throw new ForbiddenException({
-        message: 'Вы не можете получить свои данные.',
-      });
-    }
+    // if (user.username === username || user.id === id) {
+    //   throw new ForbiddenException({
+    //     message: 'Вы не можете получить свои данные.',
+    //   });
+    // }
     const whereClause = id ? { id } : { username };
     const userFind = await this.prismaService.user.findUnique({
       where: whereClause,
@@ -464,9 +460,13 @@ export class AccountService {
 
     if (!userFind) return null;
 
-    const isContact = userFind.contacts.some(
-      (c) => c.usernameContact === userFind.username,
-    );
+    const contact = await this.prismaService.userContacts.findFirst({
+      where: {
+        username: user.username,
+        usernameContact: username,
+      },
+    });
+    const isContact = !!contact;
 
     const result: Partial<User> = {
       username: userFind.username,

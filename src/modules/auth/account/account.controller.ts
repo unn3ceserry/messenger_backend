@@ -149,4 +149,8 @@ export class AccountController {
   public async featAvatar(@GetUser() user: User, @UploadedFile() file: Express.Multer.File) {
     return this.accountService.featAvatar(user, file)
   }
+  @Post('/remove-avatar')
+  public async removeAvatar(@GetUser() user: User, @Body('index') index: number) {
+    return this.accountService.removeAvatar(user, index)
+  }
 }

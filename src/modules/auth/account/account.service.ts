@@ -1,9 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,6 +15,7 @@ import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-passwor
 import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
 import { CompleteAccountDto } from './dto/user-complete.dto';
 import { FilesService } from '../../files/files.service';
+import { ConfigService } from '@nestjs/config';
 
 export enum VisibilityField {
   Phone = 'phoneVisible',
@@ -33,6 +32,7 @@ export class AccountService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly filesService: FilesService,
+    private readonly configService: ConfigService,
   ) {
     this.twilioClient = new Twilio(
       process.env.TWILIO_ACCOUNT_SID,
@@ -76,6 +76,31 @@ export class AccountService {
       },
     });
     return { url: avatar.url };
+  }
+
+  public async removeAvatar(user: User, index: number): Promise<boolean> {
+    const oldAvatarUrl = user.avatars[index];
+    let oldAvatarKey: string | null = null;
+
+    if (oldAvatarUrl.includes('/avatars/')) {
+      const split = oldAvatarUrl.split(`${this.configService.getOrThrow<string>('S3_BUCKET')}`);
+      if (split.length === 2) {
+        oldAvatarKey = split[1];
+      }
+    }
+
+    if (oldAvatarKey) {
+      await this.filesService.delete(oldAvatarKey);
+    }
+
+    await this.prismaService.user.update({
+      where: { username: user.username },
+      data: {
+        avatars: user.avatars.filter((_, i) => i !== index),
+      },
+    });
+
+    return true;
   }
 
   public async getMe(user: User): Promise<User> {
@@ -224,8 +249,10 @@ export class AccountService {
   }
 
   public async setBio(user: User, bio: string): Promise<boolean> {
-    if(bio.length > 70) {
-      throw new ConflictException({message: 'Максимаьная длинна 70 символов.'})
+    if (bio.length > 70) {
+      throw new ConflictException({
+        message: 'Максимаьная длинна 70 символов.',
+      });
     }
     await this.prismaService.user.update({
       where: {

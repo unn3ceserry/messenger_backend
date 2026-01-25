@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { User, UserContacts } from '@/prisma/generated/prisma';
 import { AddContactDto } from './dto/add-contact.dto';
@@ -20,30 +24,65 @@ export class ContactsService {
     return myUser.contacts;
   }
 
-  public async addContact(user: User, dto: AddContactDto): Promise<{
-    id: string
-    username: string
-    createdAt: Date
-    updatedAt: Date
-    usernameContact: string
-    firstNameContact: string
-    lastNameContact: string
-    avatarsContact: string | null
-  }> {
-    const {firstName, lastName, username} = dto;
+  public async editContact(user: User, dto: AddContactDto): Promise<boolean> {
+    const { firstName, lastName, username } = dto;
     const contacts = await this.getMyContacts(user);
-    const existContact = contacts.find(contact => contact.usernameContact === username);
-    if (user.username === username) {
-      throw new ConflictException({message: 'Вы не можете добавить себя в контакты.'});
-    }
-    if (existContact) {
-      throw new ConflictException({message: 'Пользователь уже в контактах.'});
+    const existContact = contacts.find(
+      (contact) => contact.usernameContact === username,
+    );
+    if (!existContact) {
+      throw new ConflictException({ message: 'Пользователь не в контактах.' });
     }
     const userContact = await this.prismaService.user.findUnique({
       where: { username },
     });
     if (!userContact) {
-      throw new NotFoundException({message: 'Пользователь не найден.'});
+      throw new NotFoundException({ message: 'Пользователь не найден.' });
+    }
+
+    await this.prismaService.userContacts.update({
+      where: {id: existContact.id},
+      data: {
+        usernameContact: userContact.username,
+        firstNameContact: firstName,
+        lastNameContact: lastName,
+        avatarsContact: userContact.avatars?.[0] || null,
+      },
+    });
+    return true;
+  }
+
+  public async addContact(
+    user: User,
+    dto: AddContactDto,
+  ): Promise<{
+    id: string;
+    username: string;
+    createdAt: Date;
+    updatedAt: Date;
+    usernameContact: string;
+    firstNameContact: string;
+    lastNameContact: string;
+    avatarsContact: string | null;
+  }> {
+    const { firstName, lastName, username } = dto;
+    const contacts = await this.getMyContacts(user);
+    const existContact = contacts.find(
+      (contact) => contact.usernameContact === username,
+    );
+    if (user.username === username) {
+      throw new ConflictException({
+        message: 'Вы не можете добавить себя в контакты.',
+      });
+    }
+    if (existContact) {
+      throw new ConflictException({ message: 'Пользователь уже в контактах.' });
+    }
+    const userContact = await this.prismaService.user.findUnique({
+      where: { username },
+    });
+    if (!userContact) {
+      throw new NotFoundException({ message: 'Пользователь не найден.' });
     }
     const createdContact = await this.prismaService.userContacts.create({
       data: {
@@ -65,7 +104,7 @@ export class ContactsService {
       },
     });
     if (!contact) {
-      throw new NotFoundException({message: 'Контакт не найден.'});
+      throw new NotFoundException({ message: 'Контакт не найден.' });
     }
     await this.prismaService.userContacts.delete({
       where: {

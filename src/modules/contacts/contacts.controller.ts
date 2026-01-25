@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 import { GetUser } from '@/src/shared/decorators/get-user.decorator';
 import type { User } from '@/prisma/generated/prisma';
@@ -16,6 +16,11 @@ export class ContactsController {
   @Post('/add-to-contact')
   public async addContact(@GetUser() user: User, @Body() dto: AddContactDto ) {
     return this.contactsService.addContact(user, dto)
+  }
+
+  @Patch('/edit-contact')
+  public async editContact(@GetUser() user: User, @Body() dto: AddContactDto ) {
+    return this.contactsService.editContact(user, dto)
   }
 
   @Delete('/delete-contact')

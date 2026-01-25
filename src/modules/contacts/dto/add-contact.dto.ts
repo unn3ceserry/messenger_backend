@@ -22,7 +22,7 @@ export class AddContactDto {
   })
   username: string;
 
-  @IsOptional()
+  @IsNotEmpty({message: 'Имя не должно быть пустым'})
   @IsString({ message: 'Имя должно быть строкой.' })
   @MaxLength(50, { message: 'Имя не может превышать 50 символов.' })
   firstName: string;

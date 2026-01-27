@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsOptional, IsString, MinLength, IsEmail, IsDate } from 'class-validator';
 
 export class CompleteAccountDto {
@@ -14,7 +14,8 @@ export class CompleteAccountDto {
   cloudPassword?: string;
 
   @IsOptional()
-  @IsDate({ message: 'День рождения должен быть датой.' })
   @Type(() => Date)
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  @IsDate({ message: 'День рождения должен быть датой.' })
   birthday: Date;
 }

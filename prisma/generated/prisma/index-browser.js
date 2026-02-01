@@ -138,6 +138,34 @@ exports.Prisma.UserScalarFieldEnum = {
   avatarsVisible: 'avatarsVisible',
   birthdayVisible: 'birthdayVisible',
   cloudPassword: 'cloudPassword',
+  isOnline: 'isOnline',
+  lastSeen: 'lastSeen',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MessageScalarFieldEnum = {
+  id: 'id',
+  text: 'text',
+  chatId: 'chatId',
+  senderId: 'senderId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ChatMemberScalarFieldEnum = {
+  id: 'id',
+  chatId: 'chatId',
+  userId: 'userId',
+  joinedAt: 'joinedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ChatScalarFieldEnum = {
+  id: 'id',
+  chatName: 'chatName',
+  isGroup: 'isGroup',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -184,6 +212,9 @@ exports.WhoCanSeen = exports.$Enums.WhoCanSeen = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  Message: 'Message',
+  ChatMember: 'ChatMember',
+  Chat: 'Chat',
   UserContacts: 'UserContacts',
   Codes: 'Codes'
 };

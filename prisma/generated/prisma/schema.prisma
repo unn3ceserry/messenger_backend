@@ -35,10 +35,62 @@ model User {
   // security
   cloudPassword String?
 
+  // chats
+  isOnline Boolean   @default(false)
+  lastSeen DateTime?
+
+  chatMembers ChatMember[]
+  messages    Message[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Message {
+  id String @id @default(uuid())
+
+  text     String
+  chat     Chat   @relation(fields: [chatId], references: [id])
+  chatId   String
+  sender   User   @relation(fields: [senderId], references: [id])
+  senderId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("messages")
+}
+
+model ChatMember {
+  id String @id @default(uuid())
+
+  chat     Chat     @relation(fields: [chatId], references: [id])
+  chatId   String
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String
+  joinedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chatMembers")
+}
+
+model Chat {
+  id String @id @default(uuid())
+
+  chatName String?
+  isGroup  Boolean @default(false)
+
+  members  ChatMember[]
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chats")
 }
 
 model UserContacts {

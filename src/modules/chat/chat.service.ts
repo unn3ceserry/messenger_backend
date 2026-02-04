@@ -1,0 +1,170 @@
+import { Chat, Message, User } from '@/prisma/generated/prisma';
+import { PrismaService } from '@/src/core/prisma/prisma.service';
+import {
+  ForbiddenException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
+import { ChatGateway } from './chat.gateway';
+
+@Injectable()
+export class ChatService {
+  public constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
+  ) {}
+
+  public async getDm(userA: string, userB: string): Promise<Chat> {
+    let chat = await this.prismaService.chat.findFirst({
+      where: {
+        isGroup: false,
+        members: { every: { userId: { in: [userA, userB] } } },
+      },
+      include: { members: true },
+    });
+    if (!chat) {
+      chat = await this.prismaService.chat.create({
+        data: {
+          isGroup: false,
+          members: {
+            create: [{ userId: userA }, { userId: userB }],
+          },
+        },
+        include: { members: true },
+      });
+    }
+
+    chat.members.forEach((usr) => {
+      this.chatGateway.server.to(`room:${usr.userId}`).emit('newDm', chat);
+    });
+
+    return chat;
+  }
+
+  public async getMyDms(user: User): Promise<Chat[]> {
+    return this.prismaService.chat.findMany({
+      where: {
+        members: { some: { userId: user.id } },
+      },
+      include: {
+        members: {
+          include: {
+            user: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+  }
+
+  public async getMessages(chatId: string, userId: string) {
+    const isMember = await this.prismaService.chatMember.findFirst({
+      where: { chatId, userId },
+    });
+    if (!isMember)
+      throw new ForbiddenException({ message: 'У вас нет доступа.' });
+
+    return this.prismaService.message.findMany({
+      where: { chatId },
+      orderBy: { createdAt: 'asc' },
+      include: { sender: true },
+    });
+  }
+
+  public async createMessage(
+    chatId: string,
+    senderId: string,
+    text: string,
+  ): Promise<Message> {
+    const isMember = await this.prismaService.chatMember.findFirst({
+      where: { chatId, userId: senderId },
+    });
+    if (!isMember)
+      throw new ForbiddenException({ message: 'У вас нет доступа.' });
+
+    return this.prismaService.message.create({
+      data: { chatId, senderId, text },
+      include: { sender: true },
+    });
+  }
+
+  public async deleteMessage(
+    messageId: string,
+    userId: string,
+  ): Promise<Message> {
+    const message = await this.prismaService.message.findUnique({
+      where: { id: messageId },
+    });
+    if (!message)
+      throw new ForbiddenException({ message: 'Сообщение не найдено.' });
+    if (message.senderId !== userId)
+      throw new ForbiddenException({
+        message: 'Вы не являетесь отправителем.',
+      });
+
+    return this.prismaService.message.update({
+      where: { id: messageId },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  public async editMessage(
+    messageId: string,
+    userId: string,
+    newText: string,
+  ): Promise<Message> {
+    const message = await this.prismaService.message.findUnique({
+      where: { id: messageId },
+    });
+    if (!message)
+      throw new ForbiddenException({ message: 'Сообщение не найдено.' });
+    if (message.senderId !== userId)
+      throw new ForbiddenException({
+        message: 'Вы не являетесь отправителем.',
+      });
+
+    return this.prismaService.message.update({
+      where: { id: messageId },
+      data: { text: newText, editedAt: new Date() },
+    });
+  }
+
+  public async getOnlineStatus(chatId: string): Promise<
+    {
+      userId: string;
+      isOnline: boolean;
+      lastSeen: Date | null;
+    }[]
+  > {
+    const members = await this.prismaService.chatMember.findMany({
+      where: { chatId },
+      include: { user: true },
+    });
+
+    return members.map((m) => ({
+      userId: m.userId,
+      isOnline: m.user.isOnline,
+      lastSeen: m.user.lastSeen,
+    }));
+  }
+
+  public async setOnline(userId: string, online: boolean) {
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: {
+        isOnline: online,
+        lastSeen: online ? null : new Date(),
+      },
+    });
+  }
+
+  public async isMember(chatId: string, userId: string): Promise<boolean> {
+    return !!(await this.prismaService.chatMember.findFirst({
+      where: { chatId, userId },
+    }));
+  }
+}

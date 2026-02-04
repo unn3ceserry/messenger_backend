@@ -7,14 +7,26 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from '@/src/shared/guards/auth.guard';
 import { AccountModule } from '@/src/modules/auth/account/account.module';
 import { ContactsModule } from '@/src/modules/contacts/contacts.module';
+import { ChatModule } from '../modules/chat/chat.module';
+import { UsersModule } from '../modules/users/users.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), RedisModule, SessionModule, AccountModule, ContactsModule],
-  providers: [PrismaService, {
-    provide: APP_GUARD,
-    useClass: AuthGuard,
-  }],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    RedisModule,
+    SessionModule,
+    AccountModule,
+    ContactsModule,
+    ChatModule,
+    UsersModule
+  ],
+  providers: [
+    PrismaService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
   exports: [PrismaService],
 })
-export class CoreModule {
-}
+export class CoreModule {}

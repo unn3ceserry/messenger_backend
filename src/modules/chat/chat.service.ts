@@ -1,4 +1,4 @@
-import { Chat, Message, User } from '@/prisma/generated/prisma';
+import { Chat, Message, Prisma, User } from '@/prisma/generated/prisma';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import {
   ForbiddenException,
@@ -8,6 +8,16 @@ import {
 } from '@nestjs/common';
 import { ChatGateway } from './chat.gateway';
 
+type ChatWithUsers = Prisma.ChatGetPayload<{
+  include: {
+    members: {
+      include: {
+        user: true;
+      };
+    };
+  };
+}>;
+
 @Injectable()
 export class ChatService {
   public constructor(
@@ -16,33 +26,46 @@ export class ChatService {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  public async getDm(userA: string, userB: string): Promise<Chat> {
+  public async getDm(user: User, userB: string): Promise<Chat> {
     let chat = await this.prismaService.chat.findFirst({
       where: {
         isGroup: false,
         AND: [
-          { members: { some: { userId: userA } } },
+          { members: { some: { userId: user.id } } },
           { members: { some: { userId: userB } } },
         ],
       },
-      include: { members: true },
+      include: {
+        members: {
+          include: {
+            user: true,
+          },
+        },
+      },
     });
 
     if (!chat) {
       chat = await this.prismaService.chat.create({
         data: {
           isGroup: false,
-          members: { create: [{ userId: userA }, { userId: userB }] },
+          members: { create: [{ userId: user.id }, { userId: userB }] },
         },
-        include: { members: true },
+        include: {
+          members: {
+            include: {
+              user: true,
+            },
+          },
+        },
       });
     }
 
-    chat.members.forEach((usr) => {
+    const newChat = await this.isContactReturnNames(user, chat);
+    newChat.members.forEach((usr) => {
       this.chatGateway.server.to(`room:${usr.userId}`).emit('newDm', chat);
     });
 
-    return chat;
+    return newChat;
   }
 
   public async getMyDms(user: User): Promise<Chat[]> {
@@ -59,22 +82,7 @@ export class ChatService {
 
     const result = await Promise.all(
       chats.map(async (chat) => {
-        const otherMember = chat.members.find((m) => m.userId !== user.id);
-        if (!otherMember) return chat;
-
-        const contact = await this.prismaService.userContacts.findFirst({
-          where: {
-            username: user.username,
-            usernameContact: otherMember.user.username,
-          },
-        });
-
-        if (contact) {
-          otherMember.user.firstName = contact.firstNameContact;
-          otherMember.user.lastName = contact.lastNameContact;
-        }
-
-        return chat;
+        return await this.isContactReturnNames(user, chat);
       }),
     );
 
@@ -152,6 +160,27 @@ export class ChatService {
       data: { text: newText, editedAt: new Date() },
     });
   }
+
+  // HELPERS
+
+  public isContactReturnNames = async (user: User, chat: ChatWithUsers) => {
+    const otherMember = chat.members.find((m) => m.userId !== user.id);
+    if (!otherMember) return chat;
+
+    const contact = await this.prismaService.userContacts.findFirst({
+      where: {
+        username: user.username,
+        usernameContact: otherMember.user.username,
+      },
+    });
+
+    if (contact) {
+      otherMember.user.firstName = contact.firstNameContact;
+      otherMember.user.lastName = contact.lastNameContact;
+    }
+
+    return chat;
+  };
 
   public async getOnlineStatus(chatId: string): Promise<
     {

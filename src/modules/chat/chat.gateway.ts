@@ -54,7 +54,6 @@ export class ChatGateway {
     if (!isMember) {
       return client.emit('error', 'Нет доступа к чату.');
     }
-
     client.join(`chat:${data.chatId}`);
   }
 

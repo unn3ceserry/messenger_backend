@@ -9,7 +9,7 @@ export class ChatController {
 
   @Get('/get/dm')
   public async getDm(@GetUser() user: User, @Query('userId') userId: string) {
-    return this.chatService.getDm(user.id, userId);
+    return this.chatService.getDm(user, userId);
   }
 
   @Get('/get/my-dms')

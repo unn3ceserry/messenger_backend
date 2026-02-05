@@ -20,17 +20,19 @@ export class ChatService {
     let chat = await this.prismaService.chat.findFirst({
       where: {
         isGroup: false,
-        members: { every: { userId: { in: [userA, userB] } } },
+        AND: [
+          { members: { some: { userId: userA } } },
+          { members: { some: { userId: userB } } },
+        ],
       },
       include: { members: true },
     });
+
     if (!chat) {
       chat = await this.prismaService.chat.create({
         data: {
           isGroup: false,
-          members: {
-            create: [{ userId: userA }, { userId: userB }],
-          },
+          members: { create: [{ userId: userA }, { userId: userB }] },
         },
         include: { members: true },
       });
@@ -44,21 +46,39 @@ export class ChatService {
   }
 
   public async getMyDms(user: User): Promise<Chat[]> {
-    return this.prismaService.chat.findMany({
+    const chats = await this.prismaService.chat.findMany({
       where: {
+        isGroup: false,
         members: { some: { userId: user.id } },
       },
       include: {
-        members: {
-          include: {
-            user: true,
-          },
-        },
+        members: { include: { user: true } },
       },
-      orderBy: {
-        updatedAt: 'desc',
-      },
+      orderBy: { updatedAt: 'desc' },
     });
+
+    const result = await Promise.all(
+      chats.map(async (chat) => {
+        const otherMember = chat.members.find((m) => m.userId !== user.id);
+        if (!otherMember) return chat;
+
+        const contact = await this.prismaService.userContacts.findFirst({
+          where: {
+            username: user.username,
+            usernameContact: otherMember.user.username,
+          },
+        });
+
+        if (contact) {
+          otherMember.user.firstName = contact.firstNameContact;
+          otherMember.user.lastName = contact.lastNameContact;
+        }
+
+        return chat;
+      }),
+    );
+
+    return result;
   }
 
   public async getMessages(chatId: string, userId: string) {

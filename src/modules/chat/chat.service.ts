@@ -5,6 +5,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { ChatGateway } from './chat.gateway';
 
@@ -13,6 +14,11 @@ type ChatWithUsers = Prisma.ChatGetPayload<{
     members: {
       include: {
         user: true;
+      };
+    };
+    messages: {
+      include: {
+        chat: true;
       };
     };
   };
@@ -41,6 +47,11 @@ export class ChatService {
             user: true,
           },
         },
+        messages: {
+          include: {
+            chat: true,
+          },
+        },
       },
     });
 
@@ -54,6 +65,11 @@ export class ChatService {
           members: {
             include: {
               user: true,
+            },
+          },
+          messages: {
+            include: {
+              chat: true,
             },
           },
         },
@@ -76,10 +92,14 @@ export class ChatService {
       },
       include: {
         members: { include: { user: true } },
+        messages: {
+          include: {
+            chat: true,
+          },
+        },
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { updatedAt: 'asc'}
     });
-
     const result = await Promise.all(
       chats.map(async (chat) => {
         return await this.isContactReturnNames(user, chat);
@@ -162,6 +182,29 @@ export class ChatService {
   }
 
   // HELPERS
+
+  public getUserChats = async (id: string) => {
+    const chats = await this.prismaService.chat.findMany({
+      where: { members: { some: { userId: id } } },
+      include: {
+        members: {
+          include: {
+            user: true,
+          },
+        },
+        messages: {
+          include: {
+            chat: true,
+            sender: true,
+          },
+        },
+      },
+    });
+
+    if (!chats) throw new NotFoundException({ message: 'Чаты не найдены.' });
+
+    return chats;
+  };
 
   public isContactReturnNames = async (user: User, chat: ChatWithUsers) => {
     const otherMember = chat.members.find((m) => m.userId !== user.id);

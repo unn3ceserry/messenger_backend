@@ -16,4 +16,12 @@ export class ChatController {
   public async getMyDms(@GetUser() user: User) {
     return this.chatService.getMyDms(user);
   }
+
+  @Get('/get/messages')
+  public async getMessages(
+    @GetUser() user: User,
+    @Query('chatId') chatId: string,
+  ) {
+    return this.chatService.getMessages(chatId, user.id);
+  }
 }

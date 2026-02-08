@@ -27,6 +27,10 @@ export class ChatGateway {
 
     await this.chatService.setOnline(userId, true);
     client.join(`room:${userId}`);
+    const userChats = await this.chatService.getUserChats(userId);
+    userChats.forEach((chat) => {
+      client.join(`chat:${chat.id}`);
+    });
     this.server.emit('userOnline', { userId });
   }
 
@@ -46,6 +50,7 @@ export class ChatGateway {
     @MessageBody() data: { chatId: string },
     @ConnectedSocket() client: Socket,
   ) {
+    console.log('joinChat');
     const userId = client.handshake.auth.userId;
     if (!userId) return client.disconnect();
 
@@ -62,6 +67,7 @@ export class ChatGateway {
     @MessageBody() data: { chatId: string; text: string },
     @ConnectedSocket() client: Socket,
   ) {
+    console.log('sendMessage');
     const userId = client.handshake.auth.userId;
     const message = await this.chatService.createMessage(
       data.chatId,
@@ -95,7 +101,6 @@ export class ChatGateway {
       data.messageId,
       userId,
     );
-    this.server.to(`chat:${message.chatId}`).emit('message:deleted', message.id);
+    this.server.to(`chat:${message.chatId}`).emit('message:deleted', message);
   }
-
 }

@@ -493,7 +493,7 @@ export class AccountService {
     const contact = await this.prismaService.userContacts.findFirst({
       where: {
         username: user.username,
-        usernameContact: username,
+        usernameContact: userFind.username,
       },
     });
     const isContact = !!contact;

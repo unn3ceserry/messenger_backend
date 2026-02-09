@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { GetUser } from '@/src/shared/decorators/get-user.decorator';
 import type { User } from '@/prisma/generated/prisma';
@@ -23,5 +23,10 @@ export class ChatController {
     @Query('chatId') chatId: string,
   ) {
     return this.chatService.getMessages(chatId, user.id);
+  }
+
+  @Delete('/delete')
+  public async deleteChat(@GetUser() user: User, @Body('chatId') chatId: string) {
+    return this.chatService.deleteChat(user, chatId)
   }
 }

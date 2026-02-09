@@ -98,7 +98,7 @@ export class ChatService {
           },
         },
       },
-      orderBy: { updatedAt: 'asc'}
+      orderBy: { updatedAt: 'asc' },
     });
     const result = await Promise.all(
       chats.map(async (chat) => {
@@ -110,11 +110,7 @@ export class ChatService {
   }
 
   public async getMessages(chatId: string, userId: string) {
-    const isMember = await this.prismaService.chatMember.findFirst({
-      where: { chatId, userId },
-    });
-    if (!isMember)
-      throw new ForbiddenException({ message: 'У вас нет доступа.' });
+    await this.isMember(chatId, userId);
 
     return this.prismaService.message.findMany({
       where: { chatId },
@@ -128,11 +124,7 @@ export class ChatService {
     senderId: string,
     text: string,
   ): Promise<Message> {
-    const isMember = await this.prismaService.chatMember.findFirst({
-      where: { chatId, userId: senderId },
-    });
-    if (!isMember)
-      throw new ForbiddenException({ message: 'У вас нет доступа.' });
+    await this.isMember(chatId, senderId);
 
     return this.prismaService.message.create({
       data: { chatId, senderId, text },
@@ -179,6 +171,30 @@ export class ChatService {
       where: { id: messageId },
       data: { text: newText, editedAt: new Date() },
     });
+  }
+  public async deleteChat(user: User, chatId: string) {
+    await this.isMember(chatId, user.id);
+
+    const chatWithMembers = await this.prismaService.chat.findUnique({
+      where: { id: chatId },
+      include: { members: { include: { user: true } } },
+    });
+
+    if (!chatWithMembers)
+      throw new NotFoundException({ message: 'Чат не найден.' });
+
+    await this.prismaService.message.deleteMany({ where: { chatId } });
+    await this.prismaService.chatMember.deleteMany({ where: { chatId } });
+
+    await this.prismaService.chat.delete({ where: { id: chatId } });
+
+    chatWithMembers.members.forEach((m) => {
+      this.chatGateway.server
+        .to(`room:${m.user.id}`)
+        .emit('chatDeleted', chatId);
+    });
+
+    return true;
   }
 
   // HELPERS

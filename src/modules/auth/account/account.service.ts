@@ -481,6 +481,8 @@ export class AccountService {
         lastName: true,
         number: true,
         email: true,
+        isOnline: true,
+        lastSeen: true,
         bio: true,
         avatars: true,
         birthday: true,
@@ -502,6 +504,8 @@ export class AccountService {
       username: userFind.username,
       firstName: isContact ? contact.firstNameContact : userFind.firstName,
       lastName: isContact ? contact.lastNameContact : userFind.lastName,
+      isOnline: userFind.isOnline,
+      lastSeen: userFind.lastSeen,
     };
 
     if (

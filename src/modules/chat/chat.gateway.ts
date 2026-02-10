@@ -31,7 +31,7 @@ export class ChatGateway {
     userChats.forEach((chat) => {
       client.join(`chat:${chat.id}`);
     });
-    this.server.emit('userOnline', { userId });
+    this.server.emit('userOnline', { userId, lastSeen: new Date() });
   }
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {

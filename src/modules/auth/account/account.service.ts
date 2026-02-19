@@ -501,6 +501,7 @@ export class AccountService {
     const isContact = !!contact;
 
     const result: Partial<User> = {
+      id: userFind.id,
       username: userFind.username,
       firstName: isContact ? contact.firstNameContact : userFind.firstName,
       lastName: isContact ? contact.lastNameContact : userFind.lastName,

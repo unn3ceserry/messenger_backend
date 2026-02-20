@@ -136,11 +136,7 @@ export class ChatService {
     messageId: string,
     userId: string,
   ): Promise<Message> {
-    const message = await this.prismaService.message.findUnique({
-      where: { id: messageId },
-    });
-    if (!message)
-      throw new ForbiddenException({ message: 'Сообщение не найдено.' });
+    const message = await this.getMessage(messageId);
     if (message.senderId !== userId)
       throw new ForbiddenException({
         message: 'Вы не являетесь отправителем.',
@@ -197,7 +193,43 @@ export class ChatService {
     return true;
   }
 
+  public async setMessagesIsRead(
+    userId: string,
+    chatId: string,
+    messageIds: Array<string>,
+  ) {
+    await this.isMember(chatId, userId);
+    const messages = await Promise.all(
+      messageIds.map((messageId) => this.getMessage(messageId)),
+    );
+
+    for (const message of messages) {
+      if (message.sender.id !== userId) {
+        await this.prismaService.message.update({
+          where: { id: message.id },
+          data: { isRead: true },
+        });
+      }
+    }
+  }
+
   // HELPERS
+
+  public async getMessage(messageId: string) {
+    const message = await this.prismaService.message.findUnique({
+      where: {
+        id: messageId,
+      },
+      include: {
+        chat: true,
+        sender: true,
+      },
+    });
+    if (!message) {
+      throw new NotFoundException({ message: 'Сообщение не найдено' });
+    }
+    return message;
+  }
 
   public getUserChats = async (id: string) => {
     const chats = await this.prismaService.chat.findMany({

@@ -51,12 +51,13 @@ model User {
 model Message {
   id String @id @default(uuid())
 
-  text     String
-  chat     Chat   @relation(fields: [chatId], references: [id])
-  chatId   String
-  sender   User   @relation(fields: [senderId], references: [id])
-  senderId String
-  editedAt DateTime?
+  text      String
+  chat      Chat      @relation(fields: [chatId], references: [id])
+  chatId    String
+  sender    User      @relation(fields: [senderId], references: [id])
+  senderId  String
+  isRead    Boolean   @default(false)
+  editedAt  DateTime?
   deletedAt DateTime?
 
   createdAt DateTime @default(now())

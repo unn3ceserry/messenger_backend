@@ -103,4 +103,19 @@ export class ChatGateway {
     );
     this.server.to(`chat:${message.chatId}`).emit('message:deleted', message);
   }
+
+  @SubscribeMessage('readMessages')
+  async readMessages(
+    @MessageBody() data: { messageIds: Array<string>; chatId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('readMessages')
+    const userId = client.handshake.auth.userId;
+    await this.chatService.setMessagesIsRead(
+      userId,
+      data.chatId,
+      data.messageIds,
+    );
+    this.server.to(`chat:${data.chatId}`).emit('message:isread', {chatId: data.chatId, messageIds: data.messageIds});
+  }
 }

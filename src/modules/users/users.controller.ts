@@ -29,4 +29,13 @@ export class UsersController {
   ) {
     return this.usersService.isMyContact(user, username);
   }
+
+  @Get('/get-user-data')
+  public async getUserData(
+    @GetUser() user: User,
+    @Query('id') id?: string,
+    @Query('username') username?: string,
+  ) {
+    return this.usersService.getUserData(user, id, username);
+  }
 }

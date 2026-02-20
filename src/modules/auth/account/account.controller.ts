@@ -109,15 +109,6 @@ export class AccountController {
     return this.accountService.setVisibility(user, field, whoCanSee);
   }
 
-  @Get('/get-user-data')
-  public async getUserData(
-    @GetUser() user: User,
-    @Query('id') id?: string,
-    @Query('username') username?: string,
-  ) {
-    return this.accountService.getUserData(user, id, username);
-  }
-
   @Post('/set-complete-data')
   public async setUserCompleteDate(
     @Body() dto: CompleteAccountDto,

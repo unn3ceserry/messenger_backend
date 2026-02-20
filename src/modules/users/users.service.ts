@@ -145,6 +145,7 @@ export class UsersService {
       firstName: isContact ? contact.firstNameContact : userFind.firstName,
       lastName: isContact ? contact.lastNameContact : userFind.lastName,
       isOnline: userFind.isOnline,
+      avatars: userFind.avatars,
       lastSeen: userFind.lastSeen,
     };
 
@@ -170,14 +171,6 @@ export class UsersService {
       (userFind.bioVisible === 'I' && userFind.id === user.id)
     ) {
       result.bio = userFind.bio;
-    }
-
-    if (
-      userFind.avatarsVisible === 'ALL' ||
-      (userFind.avatarsVisible === 'CONTACTS' && isContact) ||
-      (userFind.avatarsVisible === 'I' && userFind.id === user.id)
-    ) {
-      result.avatars = userFind.avatars;
     }
 
     if (

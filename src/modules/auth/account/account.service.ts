@@ -22,7 +22,6 @@ export enum VisibilityField {
   Phone = 'phoneVisible',
   Email = 'emailVisible',
   Bio = 'bioVisible',
-  Avatars = 'avatarsVisible',
   Birthday = 'birthdayVisible',
 }
 

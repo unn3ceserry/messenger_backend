@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -209,10 +210,6 @@ export class AccountService {
       }
     }
 
-    const existingUser = await this.prismaService.user.findUnique({
-      where: { email: newEmail },
-    });
-
     await this.prismaService.user.update({
       where: {
         id: user.id,
@@ -334,67 +331,6 @@ export class AccountService {
     return true;
   }
 
-  public async blockUser(user: User, id: string): Promise<boolean> {
-    const userFind = await this.prismaService.user.findUnique({
-      where: {
-        id,
-      },
-    });
-
-    if (!userFind) {
-      throw new NotFoundException({ message: 'Пользователь не найден.' });
-    }
-
-    if (user.blockedUsers.includes(id)) {
-      throw new ConflictException({
-        message: 'Пользователь уже заблокирован.',
-      });
-    }
-    if (user.id === id) {
-      throw new ConflictException({
-        message: 'Вы не можете заблокировать себя.',
-      });
-    }
-
-    await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        blockedUsers: [...user.blockedUsers, id],
-      },
-    });
-    return true;
-  }
-
-  public async unblockUser(user: User, id: string): Promise<boolean> {
-    const userFind = await this.prismaService.user.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!userFind) {
-      throw new NotFoundException({ message: 'Пользователь не найден.' });
-    }
-    if (!user.blockedUsers.includes(id)) {
-      throw new ConflictException({ message: 'Пользователь не заблокирован.' });
-    }
-    if (user.id === id) {
-      throw new ConflictException({
-        message: 'Вы не можете заблокировать себя.',
-      });
-    }
-    await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        blockedUsers: [...user.blockedUsers.filter((userId) => userId !== id)],
-      },
-    });
-    return true;
-  }
-
   public async setUserCompleteDate(
     user: User,
     dto: CompleteAccountDto,
@@ -446,26 +382,15 @@ export class AccountService {
     return true;
   }
 
-  public async isMyContact(user: User, username: string): Promise<boolean> {
-    const contact = await this.prismaService.userContacts.findFirst({
-      where: {
-        username: user.username,
-        usernameContact: username,
-      },
-    });
-
-    return !!contact;
-  }
-
   public async getUserData(user: User, id?: string, username?: string) {
     if (!id && !username) {
       throw new BadRequestException({ message: 'Введите айди пользователя.' });
     }
-    // if (user.username === username || user.id === id) {
-    //   throw new ForbiddenException({
-    //     message: 'Вы не можете получить свои данные.',
-    //   });
-    // }
+    if (user.username === username || user.id === id) {
+      throw new ForbiddenException({
+        message: 'Вы не можете получить свои данные.',
+      });
+    }
     const whereClause = id ? { id } : { username };
     const userFind = await this.prismaService.user.findUnique({
       where: whereClause,

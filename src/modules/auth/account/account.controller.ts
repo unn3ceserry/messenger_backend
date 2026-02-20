@@ -100,16 +100,6 @@ export class AccountController {
     return this.accountService.updateUsername(user, username);
   }
 
-  @Post('/block-user')
-  public async blockUser(@GetUser() user: User, @Body('id') id: string) {
-    return this.accountService.blockUser(user, id);
-  }
-
-  @Post('/unblock-user')
-  public async unblockUser(@GetUser() user: User, @Body('id') id: string) {
-    return this.accountService.unblockUser(user, id);
-  }
-
   @Post('/set-visibility')
   public async setVisibility(
     @Body('field') field: VisibilityField,
@@ -126,14 +116,6 @@ export class AccountController {
     @Query('username') username?: string,
   ) {
     return this.accountService.getUserData(user, id, username);
-  }
-
-  @Get('/is-my-contact')
-  public async isMyContact(
-    @GetUser() user: User,
-    @Query('username') username: string,
-  ) {
-    return this.accountService.isMyContact(user, username);
   }
 
   @Post('/set-complete-data')

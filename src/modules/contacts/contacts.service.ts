@@ -18,7 +18,7 @@ export class ContactsService {
     });
 
     if (!myUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException({message: 'Пользователь не найден.'});
     }
 
     return myUser.contacts;

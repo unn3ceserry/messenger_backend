@@ -6,7 +6,6 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { LoginAccountDto } from '@/src/modules/auth/session/dto/login-account.dto';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { User } from '@/prisma/generated/prisma';
 import { verify } from 'argon2';
@@ -15,6 +14,7 @@ import { AccountService } from '@/src/modules/account/account.service';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata';
 import { RedisService } from '@/src/core/redis/redis.service';
 import type { Request } from 'express';
+import { LoginAccountDto } from './dto/login-account.dto';
 
 @Injectable()
 export class SessionService {

@@ -156,6 +156,14 @@ exports.Prisma.MessageScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AttachmentScalarFieldEnum = {
+  id: 'id',
+  messageId: 'messageId',
+  uuidURI: 'uuidURI',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ChatMemberScalarFieldEnum = {
   id: 'id',
   chatId: 'chatId',
@@ -216,6 +224,7 @@ exports.WhoCanSeen = exports.$Enums.WhoCanSeen = {
 exports.Prisma.ModelName = {
   User: 'User',
   Message: 'Message',
+  Attachment: 'Attachment',
   ChatMember: 'ChatMember',
   Chat: 'Chat',
   UserContacts: 'UserContacts',

@@ -24,7 +24,7 @@ Backend-часть мессенджера **Fluent** — REST API + WebSocket с
 ```
 src/
 ├── core/          # Prisma, Redis, глобальные модули
-├── modules/       # Фичи: auth, chats, messages, users...
+├── modules/       # Фичи: session, chats, messages, users...
 └── main.ts
 
 prisma/

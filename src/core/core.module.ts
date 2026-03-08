@@ -9,6 +9,7 @@ import { ContactsModule } from '@/src/modules/contacts/contacts.module';
 import { ChatModule } from '../modules/chat/chat.module';
 import { UsersModule } from '../modules/users/users.module';
 import { SessionModule } from '../modules/session/session.module';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { SessionModule } from '../modules/session/session.module';
     AccountModule,
     ContactsModule,
     ChatModule,
-    UsersModule
+    UsersModule,
+    MulterModule.register()
   ],
   providers: [
     PrismaService,

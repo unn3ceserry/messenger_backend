@@ -11,14 +11,14 @@ import { AddContactDto } from './dto/add-contact.dto';
 export class ContactsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  public async getMyContacts(user: User) {
+  public async getMyContacts(user: User): Promise<UserContacts[]> {
     const myUser = await this.prismaService.user.findUnique({
       where: { id: user.id },
       include: { contacts: true },
     });
 
     if (!myUser) {
-      throw new NotFoundException({message: 'Пользователь не найден.'});
+      throw new NotFoundException({ message: 'Пользователь не найден.' });
     }
 
     return myUser.contacts;
@@ -41,7 +41,7 @@ export class ContactsService {
     }
 
     await this.prismaService.userContacts.update({
-      where: {id: existContact.id},
+      where: { id: existContact.id },
       data: {
         usernameContact: userContact.username,
         firstNameContact: firstName,
@@ -52,19 +52,7 @@ export class ContactsService {
     return true;
   }
 
-  public async addContact(
-    user: User,
-    dto: AddContactDto,
-  ): Promise<{
-    id: string;
-    username: string;
-    createdAt: Date;
-    updatedAt: Date;
-    usernameContact: string;
-    firstNameContact: string;
-    lastNameContact: string;
-    avatarsContact: string | null;
-  }> {
+  public async addContact(user: User, dto: AddContactDto): Promise<UserContacts> {
     const { firstName, lastName, username } = dto;
     const contacts = await this.getMyContacts(user);
     const existContact = contacts.find(
@@ -84,7 +72,7 @@ export class ContactsService {
     if (!userContact) {
       throw new NotFoundException({ message: 'Пользователь не найден.' });
     }
-    const createdContact = await this.prismaService.userContacts.create({
+    return this.prismaService.userContacts.create({
       data: {
         username: user.username,
         usernameContact: userContact.username,
@@ -93,7 +81,6 @@ export class ContactsService {
         avatarsContact: userContact.avatars?.[0] || null,
       },
     });
-    return createdContact;
   }
 
   public async deleteContact(user: User, username: string): Promise<boolean> {
@@ -107,9 +94,7 @@ export class ContactsService {
       throw new NotFoundException({ message: 'Контакт не найден.' });
     }
     await this.prismaService.userContacts.delete({
-      where: {
-        id: contact.id,
-      },
+      where: { id: contact.id },
     });
     return true;
   }

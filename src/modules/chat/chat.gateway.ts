@@ -64,7 +64,7 @@ export class ChatGateway {
 
   @SubscribeMessage('sendMessage')
   async sendMessage(
-    @MessageBody() data: { chatId: string; text: string },
+    @MessageBody() data: { chatId: string; text: string; files: Array<Express.Multer.File> },
     @ConnectedSocket() client: Socket,
   ) {
     console.log('sendMessage');
@@ -73,6 +73,7 @@ export class ChatGateway {
       data.chatId,
       userId,
       data.text,
+      data.files
     );
     this.server.to(`chat:${data.chatId}`).emit('message:created', message);
   }
@@ -109,13 +110,18 @@ export class ChatGateway {
     @MessageBody() data: { messageIds: Array<string>; chatId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    console.log('readMessages')
+    console.log('readMessages');
     const userId = client.handshake.auth.userId;
     await this.chatService.setMessagesIsRead(
       userId,
       data.chatId,
       data.messageIds,
     );
-    this.server.to(`chat:${data.chatId}`).emit('message:isread', {chatId: data.chatId, messageIds: data.messageIds});
+    this.server
+      .to(`chat:${data.chatId}`)
+      .emit('message:isread', {
+        chatId: data.chatId,
+        messageIds: data.messageIds,
+      });
   }
 }

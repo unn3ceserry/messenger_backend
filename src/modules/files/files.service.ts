@@ -47,7 +47,7 @@ export class FilesService {
       `${process.env.S3_ENDPOINT}/${this.bucket}/`,
     ).toString();
 
-    return { url };
+    return { url, fileName };
   }
 
   public async delete(key: string) {

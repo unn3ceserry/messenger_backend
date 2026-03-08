@@ -21,7 +21,7 @@ export class ChatGateway {
   ) {}
   @WebSocketServer() server: Server;
 
-  async handleConnection(@ConnectedSocket() client: Socket) {
+  async handleConnection(@ConnectedSocket() client: Socket): Promise<Socket | void> {
     const userId = client.handshake.auth.userId;
     if (!userId) return client.disconnect();
 
@@ -34,7 +34,7 @@ export class ChatGateway {
     this.server.emit('userOnline', { userId, lastSeen: new Date() });
   }
 
-  async handleDisconnect(@ConnectedSocket() client: Socket) {
+  async handleDisconnect(@ConnectedSocket() client: Socket): Promise<Socket | void> {
     const userId = client.handshake.auth.userId;
     if (!userId) return client.disconnect();
 
@@ -49,7 +49,7 @@ export class ChatGateway {
   public async joinChat(
     @MessageBody() data: { chatId: string },
     @ConnectedSocket() client: Socket,
-  ) {
+  ): Promise<Socket | void | boolean> {
     console.log('joinChat');
     const userId = client.handshake.auth.userId;
     if (!userId) return client.disconnect();
@@ -66,7 +66,7 @@ export class ChatGateway {
   async sendMessage(
     @MessageBody() data: { chatId: string; text: string; files: Array<Express.Multer.File> },
     @ConnectedSocket() client: Socket,
-  ) {
+  ): Promise<void> {
     console.log('sendMessage');
     const userId = client.handshake.auth.userId;
     const message = await this.chatService.createMessage(
@@ -82,7 +82,7 @@ export class ChatGateway {
   async editMessage(
     @MessageBody() data: { messageId: string; newText: string },
     @ConnectedSocket() client: Socket,
-  ) {
+  ): Promise<void> {
     const userId = client.handshake.auth.userId;
     const message = await this.chatService.editMessage(
       data.messageId,
@@ -96,7 +96,7 @@ export class ChatGateway {
   async deleteMessage(
     @MessageBody() data: { messageId: string },
     @ConnectedSocket() client: Socket,
-  ) {
+  ): Promise<void> {
     const userId = client.handshake.auth.userId;
     const message = await this.chatService.deleteMessage(
       data.messageId,
@@ -109,7 +109,7 @@ export class ChatGateway {
   async readMessages(
     @MessageBody() data: { messageIds: Array<string>; chatId: string },
     @ConnectedSocket() client: Socket,
-  ) {
+  ): Promise<void> {
     console.log('readMessages');
     const userId = client.handshake.auth.userId;
     await this.chatService.setMessagesIsRead(

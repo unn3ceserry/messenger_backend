@@ -10,8 +10,8 @@ import { LoginAccountDto } from '@/src/modules/auth/session/dto/login-account.dt
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { User } from '@/prisma/generated/prisma';
 import { verify } from 'argon2';
-import { CreateAccountDto } from '@/src/modules/auth/account/dto/create-account.dto';
-import { AccountService } from '@/src/modules/auth/account/account.service';
+import { CreateAccountDto } from '@/src/modules/account/dto/create-account.dto';
+import { AccountService } from '@/src/modules/account/account.service';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata';
 import { RedisService } from '@/src/core/redis/redis.service';
 import type { Request } from 'express';

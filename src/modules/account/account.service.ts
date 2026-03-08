@@ -7,15 +7,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
-import { CreateAccountDto } from '@/src/modules/auth/account/dto/create-account.dto';
+import { CreateAccountDto } from '@/src/modules/account/dto/create-account.dto';
 import { User, WhoCanSeen } from '@/prisma/generated/prisma';
 import { Twilio } from 'twilio';
-import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
+import { SetPasswordDto } from '@/src/modules/account/dto/set-password.dto';
 import { hash, verify } from 'argon2';
-import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
-import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
+import { ChangePasswordDto } from '@/src/modules/account/dto/change-password.dto';
+import { ChangeEmailDto } from '@/src/modules/account/dto/chnage-email.dto';
 import { CompleteAccountDto } from './dto/user-complete.dto';
-import { FilesService } from '../../files/files.service';
+import { FilesService } from '../files/files.service';
 import { ConfigService } from '@nestjs/config';
 
 export enum VisibilityField {

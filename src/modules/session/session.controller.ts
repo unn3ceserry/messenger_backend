@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Post, Req } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { LoginAccountDto } from '@/src/modules/auth/session/dto/login-account.dto';
 import type { Request } from 'express';
-import { CreateAccountDto } from '@/src/modules/auth/account/dto/create-account.dto';
+import { CreateAccountDto } from '@/src/modules/account/dto/create-account.dto';
 import { Public } from '@/src/shared/decorators/public.decorator';
 import { UserAgent } from '@/src/shared/decorators/user-agent.decorator';
 

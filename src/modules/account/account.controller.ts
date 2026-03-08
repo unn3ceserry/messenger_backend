@@ -12,12 +12,12 @@ import {
 import {
   AccountService,
   type VisibilityField,
-} from '@/src/modules/auth/account/account.service';
+} from '@/src/modules/account/account.service';
 import { GetUser } from '@/src/shared/decorators/get-user.decorator';
 import type { User, WhoCanSeen } from '@/prisma/generated/prisma';
-import { SetPasswordDto } from '@/src/modules/auth/account/dto/set-password.dto';
-import { ChangePasswordDto } from '@/src/modules/auth/account/dto/change-password.dto';
-import { ChangeEmailDto } from '@/src/modules/auth/account/dto/chnage-email.dto';
+import { SetPasswordDto } from '@/src/modules/account/dto/set-password.dto';
+import { ChangePasswordDto } from '@/src/modules/account/dto/change-password.dto';
+import { ChangeEmailDto } from '@/src/modules/account/dto/chnage-email.dto';
 import { CompleteAccountDto } from './dto/user-complete.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 

@@ -3,12 +3,14 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
+  ParseIntPipe,
   Patch,
   Post,
-  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   AccountService,
   type VisibilityField,
@@ -19,111 +21,127 @@ import { SetPasswordDto } from '@/src/modules/account/dto/set-password.dto';
 import { ChangePasswordDto } from '@/src/modules/account/dto/change-password.dto';
 import { ChangeEmailDto } from '@/src/modules/account/dto/chnage-email.dto';
 import { CompleteAccountDto } from './dto/user-complete.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('account')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  public constructor(private readonly accountService: AccountService) {}
 
-  @Get('/me')
-  public async getMe(@GetUser() user: User) {
+  @Get('me')
+  public getMe(@GetUser() user: User): Promise<User> {
     return this.accountService.getMe(user);
   }
 
-  @Post('/set-password')
-  public async setPassword(@GetUser() user: User, @Body() dto: SetPasswordDto) {
-    return this.accountService.setPassword(user, dto);
-  }
-
-  @Patch('/change-password')
-  public async changePassword(
+  @Post('complete')
+  public setUserCompleteDate(
     @GetUser() user: User,
-    @Body() dto: ChangePasswordDto,
-  ) {
-    return this.accountService.changePassword(user, dto);
-  }
-
-  @Delete('/remove-password')
-  public async removePassword(
-    @GetUser() user: User,
-  ) {
-    return this.accountService.removePassword(user);
-  }
-
-  @Post('/set-email')
-  public async addEmail(@GetUser() user: User, @Body('email') email: string) {
-    return this.accountService.addEmail(user, email);
-  }
-
-  @Patch('/update-email')
-  public async updateEmail(@GetUser() user: User, @Body() dto: ChangeEmailDto) {
-    return this.accountService.updateEmail(user, dto);
-  }
-
-  @Post('/set-birthday')
-  public async setDateBirthdate(
-    @GetUser() user: User,
-    @Body('date') date: string,
-  ) {
-    return this.accountService.setDateBirthdate(user, date);
-  }
-
-  @Delete('/remove-birthday')
-  public async removeDateBirthdate(@GetUser() user: User) {
-    return this.accountService.removeDateBirthdate(user);
-  }
-
-  @Post('/set-bio')
-  public async setBio(@GetUser() user: User, @Body('bio') bio: string) {
-    return this.accountService.setBio(user, bio);
-  }
-
-  @Delete('/remove-bio')
-  public async removeBio(@GetUser() user: User) {
-    return this.accountService.removeBio(user);
-  }
-
-  @Post('/set-name')
-  public async setNames(
-    @GetUser() user: User,
-    @Body('firstname') firstname: string,
-    @Body('lastname') lastname: string,
-  ) {
-    return this.accountService.setNames(user, firstname, lastname);
-  }
-
-  @Patch('/change-username')
-  public async updateUsername(
-    @GetUser() user: User,
-    @Body('username') username: string,
-  ) {
-    return this.accountService.updateUsername(user, username);
-  }
-
-  @Post('/set-visibility')
-  public async setVisibility(
-    @Body('field') field: VisibilityField,
-    @GetUser() user: User,
-    @Body('whoCanSee') whoCanSee: WhoCanSeen,
-  ) {
-    return this.accountService.setVisibility(user, field, whoCanSee);
-  }
-
-  @Post('/set-complete-data')
-  public async setUserCompleteDate(
     @Body() dto: CompleteAccountDto,
-    @GetUser() user: User,
-  ) {
+  ): Promise<User> {
     return this.accountService.setUserCompleteDate(user, dto);
   }
 
-  @UseInterceptors(FileInterceptor('file'))
-  @Post('/feat-avatar')
-  public async featAvatar(@GetUser() user: User, @UploadedFile() file: Express.Multer.File) {
-    return this.accountService.featAvatar(user, file)
+  @Patch('username')
+  public updateUsername(
+    @GetUser() user: User,
+    @Body('username') username: string,
+  ): Promise<boolean> {
+    return this.accountService.updateUsername(user, username);
   }
-  @Post('/remove-avatar')
-  public async removeAvatar(@GetUser() user: User, @Body('index') index: number) {
-    return this.accountService.removeAvatar(user, index)
+
+  @Patch('name')
+  public setNames(
+    @GetUser() user: User,
+    @Body('firstname') firstname: string,
+    @Body('lastname') lastname: string,
+  ): Promise<boolean> {
+    return this.accountService.setNames(user, firstname, lastname);
+  }
+
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  public featAvatar(
+    @GetUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ url: string }> {
+    return this.accountService.featAvatar(user, file);
+  }
+
+  @Delete('avatar/:index')
+  public removeAvatar(
+    @GetUser() user: User,
+    @Param('index', ParseIntPipe) index: number,
+  ): Promise<boolean> {
+    return this.accountService.removeAvatar(user, index);
+  }
+
+  @Post('password')
+  public setPassword(
+    @GetUser() user: User,
+    @Body() dto: SetPasswordDto,
+  ): Promise<boolean> {
+    return this.accountService.setPassword(user, dto);
+  }
+
+  @Patch('password')
+  public changePassword(
+    @GetUser() user: User,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<boolean> {
+    return this.accountService.changePassword(user, dto);
+  }
+
+  @Delete('password')
+  public removePassword(@GetUser() user: User): Promise<boolean> {
+    return this.accountService.removePassword(user);
+  }
+
+  @Post('email')
+  public addEmail(
+    @GetUser() user: User,
+    @Body('email') email: string,
+  ): Promise<boolean> {
+    return this.accountService.addEmail(user, email);
+  }
+
+  @Patch('email')
+  public updateEmail(
+    @GetUser() user: User,
+    @Body() dto: ChangeEmailDto,
+  ): Promise<boolean> {
+    return this.accountService.updateEmail(user, dto);
+  }
+
+  @Post('bio')
+  public setBio(
+    @GetUser() user: User,
+    @Body('bio') bio: string,
+  ): Promise<boolean> {
+    return this.accountService.setBio(user, bio);
+  }
+
+  @Delete('bio')
+  public removeBio(@GetUser() user: User): Promise<boolean> {
+    return this.accountService.removeBio(user);
+  }
+
+  @Post('birthday')
+  public setDateBirthdate(
+    @GetUser() user: User,
+    @Body('date') date: string,
+  ): Promise<boolean> {
+    return this.accountService.setDateBirthdate(user, date);
+  }
+
+  @Delete('birthday')
+  public removeDateBirthdate(@GetUser() user: User): Promise<boolean> {
+    return this.accountService.removeDateBirthdate(user);
+  }
+
+  @Patch('visibility')
+  public setVisibility(
+    @GetUser() user: User,
+    @Body('field') field: VisibilityField,
+    @Body('whoCanSee') whoCanSee: WhoCanSeen,
+  ): Promise<boolean> {
+    return this.accountService.setVisibility(user, field, whoCanSee);
   }
 }

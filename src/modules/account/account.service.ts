@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -29,109 +28,91 @@ export enum VisibilityField {
 export class AccountService {
   private readonly twilioClient: Twilio;
 
-  constructor(
+  public constructor(
     private readonly prismaService: PrismaService,
     private readonly filesService: FilesService,
     private readonly configService: ConfigService,
   ) {
     this.twilioClient = new Twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN,
+      this.configService.getOrThrow('TWILIO_ACCOUNT_SID'),
+      this.configService.getOrThrow('TWILIO_AUTH_TOKEN'),
     );
   }
 
   public async createAccount(dto: CreateAccountDto): Promise<User> {
     const { lastName, firstName, username, number, code } = dto;
-    await this.existUser(username, number);
-    // await this.verifyOtpCode(number, code);
+
     if (!lastName || !username || !firstName) {
       throw new BadRequestException({
         message: 'Для регистрации так же нужно заполнить информацию.',
         type: 'NON_INFO',
       });
     }
-    const user = await this.prismaService.user.create({
-      data: {
-        username,
-        firstName,
-        lastName,
-        number,
-      },
+
+    await this.assertUserDoesNotExist(username, number);
+    // await this.verifyOtpCode(number, code);
+
+    return this.prismaService.user.create({
+      data: { username, firstName, lastName, number },
+    });
+  }
+
+  public async getMe(user: User): Promise<User> {
+    const found = await this.prismaService.user.findUnique({
+      where: { id: user.id },
     });
 
-    return user;
+    if (!found) {
+      throw new UnauthorizedException({
+        message: 'Пользователь не авторизирован.',
+      });
+    }
+
+    return found;
   }
 
   public async featAvatar(
     user: User,
     file: Express.Multer.File,
   ): Promise<{ url: string }> {
-    const avatar = await this.filesService.upload(file);
+    const { url } = await this.filesService.upload(file);
+
     await this.prismaService.user.update({
       where: { username: user.username },
-      data: {
-        avatars: {
-          push: avatar.url,
-        },
-      },
+      data: { avatars: { push: url } },
     });
-    return { url: avatar.url };
+
+    return { url };
   }
 
   public async removeAvatar(user: User, index: number): Promise<boolean> {
-    const oldAvatarUrl = user.avatars[index];
-    let oldAvatarKey: string | null = null;
+    const avatarUrl = user.avatars[index];
+    const avatarKey = this.extractAvatarKey(avatarUrl);
 
-    if (oldAvatarUrl.includes('/avatars/')) {
-      const split = oldAvatarUrl.split(`${this.configService.getOrThrow<string>('S3_BUCKET')}`);
-      if (split.length === 2) {
-        oldAvatarKey = split[1];
-      }
-    }
-
-    if (oldAvatarKey) {
-      await this.filesService.delete(oldAvatarKey);
+    if (avatarKey) {
+      await this.filesService.delete(avatarKey);
     }
 
     await this.prismaService.user.update({
       where: { username: user.username },
-      data: {
-        avatars: user.avatars.filter((_, i) => i !== index),
-      },
+      data: { avatars: user.avatars.filter((_, i) => i !== index) },
     });
 
     return true;
-  }
-
-  public async getMe(user: User): Promise<User> {
-    const foundUser = await this.prismaService.user.findUnique({
-      where: { id: user.id },
-    });
-    if (!foundUser) {
-      throw new UnauthorizedException({
-        message: 'Пользователь не авторизирован.',
-      });
-    }
-    return foundUser;
   }
 
   public async setPassword(user: User, dto: SetPasswordDto): Promise<boolean> {
     if (user.cloudPassword) {
       throw new ConflictException({ message: 'Вы уже используете пароль.' });
     }
-    const { password, confirmPassword } = dto;
-    if (password !== confirmPassword) {
-      throw new ConflictException({ message: 'Пароль отличается от первого.' });
-    }
-    const hashPassword = await hash(password);
+
+    this.assertPasswordsMatch(dto.password, dto.confirmPassword);
+
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        cloudPassword: hashPassword,
-      },
+      where: { id: user.id },
+      data: { cloudPassword: await hash(dto.password) },
     });
+
     return true;
   }
 
@@ -139,39 +120,25 @@ export class AccountService {
     user: User,
     dto: ChangePasswordDto,
   ): Promise<boolean> {
-    if (!user.cloudPassword) {
-      throw new ConflictException({ message: 'Вы не используете пароль.' });
-    }
-    const { password, newPassword } = dto;
-    const verifyPassword = await verify(user.cloudPassword, password);
-    if (!verifyPassword) {
-      throw new ConflictException({ message: 'Неверный пароль.' });
-    }
-    const hashPassword = await hash(newPassword);
+    this.assertPasswordExists(user.cloudPassword);
+    await this.assertPasswordIsValid(user.cloudPassword!, dto.password);
+
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        cloudPassword: hashPassword,
-      },
+      where: { id: user.id },
+      data: { cloudPassword: await hash(dto.newPassword) },
     });
+
     return true;
   }
 
   public async removePassword(user: User): Promise<boolean> {
-    if (!user.cloudPassword) {
-      throw new ConflictException({ message: 'Вы не используете пароль.' });
-    }
+    this.assertPasswordExists(user.cloudPassword);
 
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        cloudPassword: null,
-      },
+      where: { id: user.id },
+      data: { cloudPassword: null },
     });
+
     return true;
   }
 
@@ -181,65 +148,46 @@ export class AccountService {
         message: 'К аккаунту уже привязана почта.',
       });
     }
+
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        email,
-      },
+      where: { id: user.id },
+      data: { email },
     });
+
     return true;
   }
 
   public async updateEmail(user: User, dto: ChangeEmailDto): Promise<boolean> {
-    const { newEmail, cloudPassword } = dto;
     if (user.cloudPassword) {
-      if (!cloudPassword) {
+      if (!dto.cloudPassword) {
         throw new NotFoundException({
           message: 'Введите облачный пароль.',
           type: 'NON_PASSWORD',
         });
       }
-      const isValidPassword = await verify(user.cloudPassword, cloudPassword);
-      if (!isValidPassword) {
-        throw new UnauthorizedException({
-          message: 'Неверный облачный пароль.',
-        });
-      }
+      await this.assertPasswordIsValid(user.cloudPassword, dto.cloudPassword);
     }
 
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        email: newEmail,
-      },
+      where: { id: user.id },
+      data: { email: dto.newEmail },
     });
+
     return true;
   }
 
   public async setDateBirthdate(user: User, date: string): Promise<boolean> {
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        birthday: new Date(date),
-      },
+      where: { id: user.id },
+      data: { birthday: new Date(date) },
     });
     return true;
   }
 
   public async removeDateBirthdate(user: User): Promise<boolean> {
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        birthday: null,
-      },
+      where: { id: user.id },
+      data: { birthday: null },
     });
     return true;
   }
@@ -247,28 +195,22 @@ export class AccountService {
   public async setBio(user: User, bio: string): Promise<boolean> {
     if (bio.length > 70) {
       throw new ConflictException({
-        message: 'Максимаьная длинна 70 символов.',
+        message: 'Максимальная длинна 70 символов.',
       });
     }
+
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        bio,
-      },
+      where: { id: user.id },
+      data: { bio },
     });
+
     return true;
   }
 
   public async removeBio(user: User): Promise<boolean> {
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        bio: null,
-      },
+      where: { id: user.id },
+      data: { bio: null },
     });
     return true;
   }
@@ -281,15 +223,12 @@ export class AccountService {
     if (lastname.length < 2 || firstname.length < 2) {
       throw new ConflictException({ message: 'Минимальная длинна 2.' });
     }
+
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        firstName: firstname,
-        lastName: lastname,
-      },
+      where: { id: user.id },
+      data: { firstName: firstname, lastName: lastname },
     });
+
     return true;
   }
 
@@ -300,11 +239,6 @@ export class AccountService {
           'Минимальная длинна имени пользователя не может быть меньше 5 символов.',
       });
     }
-    const existName = await this.prismaService.user.findUnique({
-      where: {
-        username,
-      },
-    });
 
     if (!/^[a-z0-9]+$/.test(username)) {
       throw new ConflictException({
@@ -313,20 +247,20 @@ export class AccountService {
       });
     }
 
-    if (existName) {
+    const taken = await this.prismaService.user.findUnique({
+      where: { username },
+    });
+    if (taken) {
       throw new ConflictException({
         message: 'Это имя пользователя уже занято.',
       });
     }
 
     await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        username,
-      },
+      where: { id: user.id },
+      data: { username },
     });
+
     return true;
   }
 
@@ -335,30 +269,24 @@ export class AccountService {
     dto: CompleteAccountDto,
   ): Promise<User> {
     const { birthday, email, cloudPassword } = dto;
-    const exists = await this.prismaService.user.findUnique({
-      where: { email },
-    });
 
-    if (exists && exists.id !== user.id) {
-      throw new ConflictException({ message: 'Данная почта уже занята.' });
+    if (email) {
+      await this.assertEmailIsAvailable(email, user.id);
     }
-    let hashPassword;
-    if (cloudPassword) {
-      hashPassword = await hash(cloudPassword);
-    }
-    return await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
+
+    const hashedPassword = cloudPassword
+      ? await hash(cloudPassword)
+      : undefined;
+
+    return this.prismaService.user.update({
+      where: { id: user.id },
       data: {
-        birthday: birthday ? birthday : user.birthday,
-        email: email ? email : user.email,
-        cloudPassword: cloudPassword ? hashPassword : user.cloudPassword,
+        birthday: birthday ?? user.birthday,
+        email: email ?? user.email,
+        cloudPassword: hashedPassword ?? user.cloudPassword,
       },
     });
   }
-
-  // VISIBLE SETTINGS
 
   public async setVisibility(
     user: User,
@@ -381,66 +309,30 @@ export class AccountService {
     return true;
   }
 
-  // HELPERS
+  public async sendOtpToMobile(phoneNumber: string): Promise<string> {
+    const formatted = `+${phoneNumber.replace(/\D/g, '')}`;
 
-  public async existUser(username: string, number: string): Promise<boolean> {
-    const user = await this.prismaService.user.findFirst({
-      where: {
-        OR: [
-          { username: { equals: username } },
-          { number: { equals: number } },
-        ],
-      },
-    });
-
-    if (user) {
-      throw new ConflictException({
-        message: 'Пользователь с такими данными уже существует.',
-      });
-    }
-    return true;
-  }
-
-  async sendOtpToMobile(phoneNumber: string) {
-    const otp = this.generateOtp();
-    const formattedNumber = `+${phoneNumber.replace(/\D/g, '')}`;
-    if (!/^\+\d{10,15}$/.test(formattedNumber)) {
+    if (!/^\+\d{10,15}$/.test(formatted)) {
       throw new BadRequestException({
         message: 'Неверный формат номера телефона.',
       });
     }
-    if (process.env.TWILIO_PHONE_NUMBER === phoneNumber) {
+
+    if (this.configService.get('TWILIO_PHONE_NUMBER') === phoneNumber) {
       throw new BadRequestException({
         message: 'Вы не можете отправить SMS на этот номер.',
       });
     }
-    try {
-      const isExistCode = await this.prismaService.codes.findUnique({
-        where: {
-          number: phoneNumber,
-        },
-      });
 
-      if (isExistCode) {
-        await this.prismaService.codes.delete({
-          where: {
-            number: phoneNumber,
-          },
-        });
-      }
-      await this.prismaService.codes.create({
-        data: {
-          number: phoneNumber,
-          code: otp,
-        },
-      });
+    const otp = this.generateOtp();
+    await this.upsertOtpCode(phoneNumber, otp);
+
+    try {
       await this.twilioClient.messages.create({
         body: `Ваш код для підтвердження: ${otp}. Використайте його, щоб увійти.`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: `+${phoneNumber}`,
+        from: this.configService.getOrThrow('TWILIO_PHONE_NUMBER'),
+        to: formatted,
       });
-
-      return otp;
     } catch (error) {
       if (error?.code === 21211) {
         throw new BadRequestException({
@@ -449,34 +341,19 @@ export class AccountService {
           twilioErrorCode: error.code,
         });
       }
+      throw error;
     }
-  }
 
-  private generateOtp(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
-    let otp = '';
-    for (let i = 0; i < 6; i++) {
-      otp +=
-        i % 2 === 0
-          ? numbers.charAt(Math.floor(Math.random() * numbers.length))
-          : chars.charAt(Math.floor(Math.random() * chars.length));
-    }
     return otp;
   }
 
-  private async sendCode(number: string) {
-    const otp = await this.sendOtpToMobile(number);
-    return { message: 'Код подтверждения успешно отправлен.', code: otp };
-  }
-
-  public async verifyOtpCode(number: string, code?: string) {
-    const codeInDatabase = await this.prismaService.codes.findUnique({
+  public async verifyOtpCode(number: string, code?: string): Promise<void> {
+    const record = await this.prismaService.codes.findUnique({
       where: { number },
     });
 
-    if (!codeInDatabase) {
-      await this.sendCode(number);
+    if (!record) {
+      await this.dispatchOtpCode(number);
       throw new BadRequestException({
         message:
           'Код подтверждения отправлен. Пожалуйста, введите код, чтобы продолжить.',
@@ -484,13 +361,103 @@ export class AccountService {
       });
     }
 
-    if (!code)
+    if (!code) {
       throw new BadRequestException({
         message: 'Введите код подтверждения.',
         type: 'NON_CODE',
       });
+    }
 
-    if (codeInDatabase.code !== code)
+    if (record.code !== code) {
       throw new BadRequestException({ message: 'Неверный код подтверждения.' });
+    }
+  }
+
+  //  helpers
+
+  private async assertUserDoesNotExist(
+    username: string,
+    number: string,
+  ): Promise<void> {
+    const exists = await this.prismaService.user.findFirst({
+      where: {
+        OR: [
+          { username: { equals: username } },
+          { number: { equals: number } },
+        ],
+      },
+    });
+
+    if (exists) {
+      throw new ConflictException({
+        message: 'Пользователь с такими данными уже существует.',
+      });
+    }
+  }
+
+  private async assertEmailIsAvailable(
+    email: string,
+    currentUserId: string,
+  ): Promise<void> {
+    const exists = await this.prismaService.user.findUnique({
+      where: { email },
+    });
+
+    if (exists && exists.id !== currentUserId) {
+      throw new ConflictException({ message: 'Данная почта уже занята.' });
+    }
+  }
+
+  private assertPasswordExists(
+    password: string | null,
+  ): asserts password is string {
+    if (!password) {
+      throw new ConflictException({ message: 'Вы не используете пароль.' });
+    }
+  }
+
+  private assertPasswordsMatch(password: string, confirm: string): void {
+    if (password !== confirm) {
+      throw new ConflictException({ message: 'Пароль отличается от первого.' });
+    }
+  }
+
+  private async assertPasswordIsValid(
+    hashed: string,
+    plain: string,
+  ): Promise<void> {
+    const valid = await verify(hashed, plain);
+    if (!valid) {
+      throw new UnauthorizedException({ message: 'Неверный облачный пароль.' });
+    }
+  }
+
+  private extractAvatarKey(url: string): string | null {
+    if (!url.includes('/avatars/')) return null;
+
+    const bucket = this.configService.getOrThrow<string>('S3_BUCKET');
+    const parts = url.split(bucket);
+
+    return parts.length === 2 ? parts[1] : null;
+  }
+
+  private async upsertOtpCode(number: string, otp: string): Promise<void> {
+    await this.prismaService.codes.deleteMany({ where: { number } });
+    await this.prismaService.codes.create({ data: { number, code: otp } });
+  }
+
+  private async dispatchOtpCode(number: string): Promise<void> {
+    await this.sendOtpToMobile(number);
+  }
+
+  private generateOtp(): string {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digits = '0123456789';
+
+    return Array.from({ length: 6 }, (_, i) =>
+      i % 2 === 0
+        ? digits[Math.floor(Math.random() * digits.length)]
+        : letters[Math.floor(Math.random() * letters.length)],
+    ).join('');
   }
 }

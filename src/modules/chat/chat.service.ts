@@ -18,6 +18,7 @@ type ChatWithUsers = Prisma.ChatGetPayload<{
     };
     messages: {
       include: {
+        attachments: true;
         chat: true;
       };
     };
@@ -49,6 +50,7 @@ export class ChatService {
         },
         messages: {
           include: {
+            attachments: true,
             chat: true,
           },
         },
@@ -69,6 +71,7 @@ export class ChatService {
           },
           messages: {
             include: {
+              attachments: true,
               chat: true,
             },
           },
@@ -94,6 +97,7 @@ export class ChatService {
         members: { include: { user: true } },
         messages: {
           include: {
+            attachments: true,
             chat: true,
           },
         },
@@ -115,7 +119,7 @@ export class ChatService {
     return this.prismaService.message.findMany({
       where: { chatId },
       orderBy: { createdAt: 'asc' },
-      include: { sender: true },
+      include: { sender: true, attachments: true },
     });
   }
 

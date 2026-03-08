@@ -29,16 +29,12 @@ export class FilesService {
       throw new NotFoundException('Файл не найден');
     }
 
-    if (!file.mimetype.startsWith('image/')) {
-      throw new BadRequestException({message: 'Можно загружать только изображения.'});
-    }
-
     const ext = file.mimetype.split('/')[1];
     const fileName = `${randomBytes(16).toString('hex')}.${ext}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
-      Key: `avatars/${fileName}`,
+      Key: `files/${fileName}`,
       Body: file.buffer,
       ContentType: file.mimetype,
       CacheControl: 'public, max-age=31536000, immutable',
@@ -47,7 +43,7 @@ export class FilesService {
     await this.client.send(command);
 
     const url = new URL(
-      `avatars/${fileName}`,
+      `files/${fileName}`,
       `${process.env.S3_ENDPOINT}/${this.bucket}/`,
     ).toString();
 

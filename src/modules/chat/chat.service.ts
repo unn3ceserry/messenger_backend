@@ -8,22 +8,30 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ChatGateway } from './chat.gateway';
+import { FilesService } from '../files/files.service';
 
 type ChatWithUsers = Prisma.ChatGetPayload<{
   include: {
-    members: {
-      include: {
-        user: true;
-      };
-    };
-    messages: {
-      include: {
-        attachments: true;
-        chat: true;
-      };
-    };
+    members: { include: { user: true } };
+    messages: { include: { attachments: true; chat: true } };
   };
 }>;
+
+type OnlineStatus = {
+  userId: string;
+  isOnline: boolean;
+  lastSeen: Date | null;
+};
+
+const CHAT_FULL_INCLUDE = {
+  members: { include: { user: true } },
+  messages: { include: { attachments: true, chat: true } },
+} satisfies Prisma.ChatInclude;
+
+const MESSAGE_FULL_INCLUDE = {
+  sender: true,
+  attachments: true,
+} satisfies Prisma.MessageInclude;
 
 @Injectable()
 export class ChatService {
@@ -31,60 +39,18 @@ export class ChatService {
     private readonly prismaService: PrismaService,
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+    private readonly filesService: FilesService,
   ) {}
 
-  public async getDm(user: User, userB: string): Promise<Chat> {
-    let chat = await this.prismaService.chat.findFirst({
-      where: {
-        isGroup: false,
-        AND: [
-          { members: { some: { userId: user.id } } },
-          { members: { some: { userId: userB } } },
-        ],
-      },
-      include: {
-        members: {
-          include: {
-            user: true,
-          },
-        },
-        messages: {
-          include: {
-            attachments: true,
-            chat: true,
-          },
-        },
-      },
-    });
+  public async getDm(user: User, userBId: string): Promise<Chat> {
+    const chat =
+      (await this.findExistingDm(user.id, userBId)) ??
+      (await this.createDm(user.id, userBId));
 
-    if (!chat) {
-      chat = await this.prismaService.chat.create({
-        data: {
-          isGroup: false,
-          members: { create: [{ userId: user.id }, { userId: userB }] },
-        },
-        include: {
-          members: {
-            include: {
-              user: true,
-            },
-          },
-          messages: {
-            include: {
-              attachments: true,
-              chat: true,
-            },
-          },
-        },
-      });
-    }
+    const enriched = await this.enrichChatWithContactNames(user, chat);
+    this.broadcastNewDm(enriched);
 
-    const newChat = await this.isContactReturnNames(user, chat);
-    newChat.members.forEach((usr) => {
-      this.chatGateway.server.to(`room:${usr.userId}`).emit('newDm', chat);
-    });
-
-    return newChat;
+    return enriched;
   }
 
   public async getMyDms(user: User): Promise<Chat[]> {
@@ -93,33 +59,22 @@ export class ChatService {
         isGroup: false,
         members: { some: { userId: user.id } },
       },
-      include: {
-        members: { include: { user: true } },
-        messages: {
-          include: {
-            attachments: true,
-            chat: true,
-          },
-        },
-      },
+      include: CHAT_FULL_INCLUDE,
       orderBy: { updatedAt: 'asc' },
     });
-    const result = await Promise.all(
-      chats.map(async (chat) => {
-        return await this.isContactReturnNames(user, chat);
-      }),
-    );
 
-    return result;
+    return Promise.all(
+      chats.map((chat) => this.enrichChatWithContactNames(user, chat)),
+    );
   }
 
   public async getMessages(chatId: string, userId: string) {
-    await this.isMember(chatId, userId);
+    await this.assertIsMember(chatId, userId);
 
     return this.prismaService.message.findMany({
       where: { chatId },
       orderBy: { createdAt: 'asc' },
-      include: { sender: true, attachments: true },
+      include: MESSAGE_FULL_INCLUDE,
     });
   }
 
@@ -127,13 +82,20 @@ export class ChatService {
     chatId: string,
     senderId: string,
     text: string,
+    files?: Express.Multer.File[],
   ): Promise<Message> {
-    await this.isMember(chatId, senderId);
+    await this.assertIsMember(chatId, senderId);
 
-    return this.prismaService.message.create({
+    const message = await this.prismaService.message.create({
       data: { chatId, senderId, text },
       include: { sender: true },
     });
+
+    if (files?.length) {
+      await this.attachFilesToMessage(message.id, files);
+    }
+
+    return message;
   }
 
   public async deleteMessage(
@@ -141,10 +103,7 @@ export class ChatService {
     userId: string,
   ): Promise<Message> {
     const message = await this.getMessage(messageId);
-    if (message.senderId !== userId)
-      throw new ForbiddenException({
-        message: 'Вы не являетесь отправителем.',
-      });
+    this.assertIsSender(message, userId);
 
     return this.prismaService.message.update({
       where: { id: messageId },
@@ -157,42 +116,27 @@ export class ChatService {
     userId: string,
     newText: string,
   ): Promise<Message> {
-    const message = await this.prismaService.message.findUnique({
-      where: { id: messageId },
-    });
-    if (!message)
-      throw new ForbiddenException({ message: 'Сообщение не найдено.' });
-    if (message.senderId !== userId)
-      throw new ForbiddenException({
-        message: 'Вы не являетесь отправителем.',
-      });
+    const message = await this.getMessage(messageId);
+    this.assertIsSender(message, userId);
 
     return this.prismaService.message.update({
       where: { id: messageId },
       data: { text: newText, editedAt: new Date() },
     });
   }
-  public async deleteChat(user: User, chatId: string) {
-    await this.isMember(chatId, user.id);
 
-    const chatWithMembers = await this.prismaService.chat.findUnique({
+  public async deleteChat(user: User, chatId: string): Promise<true> {
+    await this.assertIsMember(chatId, user.id);
+
+    const chat = await this.prismaService.chat.findUnique({
       where: { id: chatId },
       include: { members: { include: { user: true } } },
     });
 
-    if (!chatWithMembers)
-      throw new NotFoundException({ message: 'Чат не найден.' });
+    if (!chat) throw new NotFoundException({ message: 'Чат не найден.' });
 
-    await this.prismaService.message.deleteMany({ where: { chatId } });
-    await this.prismaService.chatMember.deleteMany({ where: { chatId } });
-
-    await this.prismaService.chat.delete({ where: { id: chatId } });
-
-    chatWithMembers.members.forEach((m) => {
-      this.chatGateway.server
-        .to(`room:${m.user.id}`)
-        .emit('chatDeleted', chatId);
-    });
+    await this.cascadeDeleteChat(chatId);
+    this.broadcastChatDeleted(chat.members, chatId);
 
     return true;
   }
@@ -200,65 +144,116 @@ export class ChatService {
   public async setMessagesIsRead(
     userId: string,
     chatId: string,
-    messageIds: Array<string>,
-  ) {
-    await this.isMember(chatId, userId);
+    messageIds: string[],
+  ): Promise<void> {
+    await this.assertIsMember(chatId, userId);
+
     const messages = await Promise.all(
-      messageIds.map((messageId) => this.getMessage(messageId)),
+      messageIds.map((id) => this.getMessage(id)),
     );
 
-    for (const message of messages) {
-      if (message.sender.id !== userId) {
-        await this.prismaService.message.update({
-          where: { id: message.id },
-          data: { isRead: true },
-        });
-      }
-    }
+    await Promise.all(
+      messages
+        .filter((msg) => msg.sender.id !== userId)
+        .map((msg) =>
+          this.prismaService.message.update({
+            where: { id: msg.id },
+            data: { isRead: true },
+          }),
+        ),
+    );
   }
 
-  // HELPERS
+  public async getOnlineStatus(chatId: string): Promise<OnlineStatus[]> {
+    const members = await this.prismaService.chatMember.findMany({
+      where: { chatId },
+      include: { user: true },
+    });
+
+    return members.map(({ userId, user }) => ({
+      userId,
+      isOnline: user.isOnline,
+      lastSeen: user.lastSeen,
+    }));
+  }
+
+  public async setOnline(userId: string, online: boolean): Promise<void> {
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: {
+        isOnline: online,
+        lastSeen: online ? null : new Date(),
+      },
+    });
+  }
+
+  public async isMember(chatId: string, userId: string): Promise<boolean> {
+    const member = await this.prismaService.chatMember.findFirst({
+      where: { chatId, userId },
+    });
+    return !!member;
+  }
+
+  public getUserChats = async (userId: string) => {
+    return this.prismaService.chat.findMany({
+      where: { members: { some: { userId } } },
+      include: {
+        members: { include: { user: true } },
+        messages: { include: { chat: true, sender: true } },
+      },
+    });
+  };
 
   public async getMessage(messageId: string) {
     const message = await this.prismaService.message.findUnique({
-      where: {
-        id: messageId,
-      },
-      include: {
-        chat: true,
-        sender: true,
-      },
+      where: { id: messageId },
+      include: { chat: true, sender: true },
     });
+
     if (!message) {
-      throw new NotFoundException({ message: 'Сообщение не найдено' });
+      throw new NotFoundException({ message: 'Сообщение не найдено.' });
     }
+
     return message;
   }
 
-  public getUserChats = async (id: string) => {
-    const chats = await this.prismaService.chat.findMany({
-      where: { members: { some: { userId: id } } },
-      include: {
+  //  helpers
+
+  private async findExistingDm(
+    userAId: string,
+    userBId: string,
+  ): Promise<ChatWithUsers | null> {
+    return this.prismaService.chat.findFirst({
+      where: {
+        isGroup: false,
+        AND: [
+          { members: { some: { userId: userAId } } },
+          { members: { some: { userId: userBId } } },
+        ],
+      },
+      include: CHAT_FULL_INCLUDE,
+    });
+  }
+
+  private async createDm(
+    userAId: string,
+    userBId: string,
+  ): Promise<ChatWithUsers> {
+    return this.prismaService.chat.create({
+      data: {
+        isGroup: false,
         members: {
-          include: {
-            user: true,
-          },
-        },
-        messages: {
-          include: {
-            chat: true,
-            sender: true,
-          },
+          create: [{ userId: userAId }, { userId: userBId }],
         },
       },
+      include: CHAT_FULL_INCLUDE,
     });
+  }
 
-    if (!chats) throw new NotFoundException({ message: 'Чаты не найдены.' });
-
-    return chats;
-  };
-
-  public isContactReturnNames = async (user: User, chat: ChatWithUsers) => {
+  public enrichChatWithContactNames = async (
+    user: User,
+    chat: ChatWithUsers,
+  ): Promise<ChatWithUsers> => {
     const otherMember = chat.members.find((m) => m.userId !== user.id);
     if (!otherMember) return chat;
 
@@ -277,38 +272,55 @@ export class ChatService {
     return chat;
   };
 
-  public async getOnlineStatus(chatId: string): Promise<
-    {
-      userId: string;
-      isOnline: boolean;
-      lastSeen: Date | null;
-    }[]
-  > {
-    const members = await this.prismaService.chatMember.findMany({
-      where: { chatId },
-      include: { user: true },
-    });
-
-    return members.map((m) => ({
-      userId: m.userId,
-      isOnline: m.user.isOnline,
-      lastSeen: m.user.lastSeen,
-    }));
+  private async attachFilesToMessage(
+    messageId: string,
+    files: Express.Multer.File[],
+  ): Promise<void> {
+    await Promise.all(
+      files.map(async (file) => {
+        const { fileName } = await this.filesService.upload(file);
+        await this.prismaService.attachment.create({
+          data: { messageId, uuidURI: fileName },
+        });
+      }),
+    );
   }
 
-  public async setOnline(userId: string, online: boolean) {
-    await this.prismaService.user.update({
-      where: { id: userId },
-      data: {
-        isOnline: online,
-        lastSeen: online ? null : new Date(),
-      },
+  private async cascadeDeleteChat(chatId: string): Promise<void> {
+    await this.prismaService.message.deleteMany({ where: { chatId } });
+    await this.prismaService.chatMember.deleteMany({ where: { chatId } });
+    await this.prismaService.chat.delete({ where: { id: chatId } });
+  }
+
+  private async assertIsMember(chatId: string, userId: string): Promise<void> {
+    const isMember = await this.isMember(chatId, userId);
+    if (!isMember) {
+      throw new ForbiddenException({
+        message: 'Вы не являетесь участником чата.',
+      });
+    }
+  }
+
+  private assertIsSender(message: { senderId: string }, userId: string): void {
+    if (message.senderId !== userId) {
+      throw new ForbiddenException({
+        message: 'Вы не являетесь отправителем.',
+      });
+    }
+  }
+
+  private broadcastNewDm(chat: ChatWithUsers): void {
+    chat.members.forEach(({ userId }) => {
+      this.chatGateway.server.to(`room:${userId}`).emit('newDm', chat);
     });
   }
 
-  public async isMember(chatId: string, userId: string): Promise<boolean> {
-    return !!(await this.prismaService.chatMember.findFirst({
-      where: { chatId, userId },
-    }));
+  private broadcastChatDeleted(
+    members: { user: { id: string } }[],
+    chatId: string,
+  ): void {
+    members.forEach(({ user }) => {
+      this.chatGateway.server.to(`room:${user.id}`).emit('chatDeleted', chatId);
+    });
   }
 }

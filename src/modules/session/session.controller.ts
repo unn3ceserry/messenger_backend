@@ -12,13 +12,21 @@ export class SessionController {
 
   @Public()
   @Post('/login')
-  public async login(@Body() dto: LoginAccountDto, @Req() req: Request, @UserAgent() agent: string) {
+  public async login(
+    @Body() dto: LoginAccountDto,
+    @Req() req: Request,
+    @UserAgent() agent: string,
+  ) {
     return this.sessionService.login(dto, req, agent);
   }
 
   @Public()
   @Post('/register')
-  public async register(@Body() dto: CreateAccountDto, @Req() req: Request, @UserAgent() agent: string) {
+  public async register(
+    @Body() dto: CreateAccountDto,
+    @Req() req: Request,
+    @UserAgent() agent: string,
+  ) {
     return this.sessionService.register(dto, req, agent);
   }
 
@@ -27,33 +35,33 @@ export class SessionController {
     return this.sessionService.logout(req);
   }
 
-  @Get('/get/all')
-  public async findByUser(@Req() req: Request) {
-    return this.sessionService.findByUser(req);
+  @Get('/sessions')
+  public async findUserSessions(@Req() req: Request) {
+    return this.sessionService.findUserSessions(req);
   }
 
-  @Get('/get/current')
-  public async findCurrent(@Req() req: Request) {
-    return this.sessionService.findCurrent(req);
+  @Get('/session')
+  public async findUserSession(@Req() req: Request) {
+    return this.sessionService.findUserSession(req);
   }
 
   @Delete('/remove')
   public async remove(@Req() req: Request, @Body('id') id: string) {
-    return this.sessionService.remove(req, id);
+    return this.sessionService.removeSession(req, id);
   }
 
-  @Delete('/clear/all')
+  @Delete('/clear')
   public async removeAll(@Req() req: Request) {
-    return this.sessionService.removeAll(req);
+    return this.sessionService.removeSessions(req);
   }
 
-  @Get('/coockie/clear')
+  @Get('/coockies')
   public async clearCookie(@Req() req: Request) {
     return this.sessionService.clearCookie(req);
   }
 
   @Public()
-  @Post('/resend/code')
+  @Post('/code')
   public async resendCode(@Body('number') number: string) {
     return this.sessionService.sendOtpToMobile(number);
   }

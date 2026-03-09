@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Param,
   ParseIntPipe,
   Patch,
   Post,
@@ -65,10 +64,10 @@ export class AccountController {
     return this.accountService.featAvatar(user, file);
   }
 
-  @Delete('avatar/:index')
+  @Delete('avatar')
   public removeAvatar(
     @GetUser() user: User,
-    @Param('index', ParseIntPipe) index: number,
+    @Body('index', ParseIntPipe) index: number,
   ): Promise<boolean> {
     return this.accountService.removeAvatar(user, index);
   }

@@ -8,12 +8,12 @@ import { AddContactDto } from './dto/add-contact.dto';
 export class ContactsController {
   public constructor(private readonly contactsService: ContactsService) {}
 
-  @Get('/get-contacts')
+  @Get('/contacts')
   public getMyContacts(@GetUser() user: User): Promise<UserContacts[]> {
     return this.contactsService.getMyContacts(user);
   }
 
-  @Post('/add-to-contact')
+  @Post('/add')
   public addContact(
     @GetUser() user: User,
     @Body() dto: AddContactDto,
@@ -21,7 +21,7 @@ export class ContactsController {
     return this.contactsService.addContact(user, dto);
   }
 
-  @Patch('/edit-contact')
+  @Patch('/edit')
   public editContact(
     @GetUser() user: User,
     @Body() dto: AddContactDto,
@@ -29,7 +29,7 @@ export class ContactsController {
     return this.contactsService.editContact(user, dto);
   }
 
-  @Delete('/delete-contact')
+  @Delete('/contact')
   public deleteContact(
     @GetUser() user: User,
     @Body('username') username: string,

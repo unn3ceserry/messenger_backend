@@ -220,9 +220,6 @@ export class AccountService {
     firstname: string,
     lastname: string,
   ): Promise<boolean> {
-    if (lastname.length < 2 || firstname.length < 2) {
-      throw new ConflictException({ message: 'Минимальная длинна 2.' });
-    }
 
     await this.prismaService.user.update({
       where: { id: user.id },

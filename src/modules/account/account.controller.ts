@@ -20,6 +20,7 @@ import { SetPasswordDto } from '@/src/modules/account/dto/set-password.dto';
 import { ChangePasswordDto } from '@/src/modules/account/dto/change-password.dto';
 import { ChangeEmailDto } from '@/src/modules/account/dto/chnage-email.dto';
 import { CompleteAccountDto } from './dto/user-complete.dto';
+import { ChangeNameDto } from './dto/change-name.dto';
 
 @Controller('account')
 export class AccountController {
@@ -49,10 +50,9 @@ export class AccountController {
   @Patch('name')
   public setNames(
     @GetUser() user: User,
-    @Body('firstname') firstname: string,
-    @Body('lastname') lastname: string,
+    @Body() dto: ChangeNameDto,
   ): Promise<boolean> {
-    return this.accountService.setNames(user, firstname, lastname);
+    return this.accountService.setNames(user, dto.firstName, dto.lastName);
   }
 
   @Post('avatar')

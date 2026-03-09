@@ -7,7 +7,7 @@ import type { Chat, Message, User } from '@/prisma/generated/prisma';
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @Get('/get/dm')
+  @Get('/dm')
   public async getDm(
     @GetUser() user: User,
     @Query('userId') userId: string,
@@ -15,12 +15,12 @@ export class ChatController {
     return this.chatService.getDm(user, userId);
   }
 
-  @Get('/get/my-dms')
+  @Get('/dms')
   public async getMyDms(@GetUser() user: User): Promise<Array<Chat>> {
     return this.chatService.getMyDms(user);
   }
 
-  @Get('/get/messages')
+  @Get('/messages')
   public async getMessages(
     @GetUser() user: User,
     @Query('chatId') chatId: string,

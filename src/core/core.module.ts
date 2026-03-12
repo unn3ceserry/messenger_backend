@@ -10,6 +10,7 @@ import { ChatModule } from '../modules/chat/chat.module';
 import { UsersModule } from '../modules/users/users.module';
 import { SessionModule } from '../modules/session/session.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { FilesModule } from '../modules/files/files.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MulterModule } from '@nestjs/platform-express';
     ContactsModule,
     ChatModule,
     UsersModule,
+    FilesModule,
     MulterModule.register()
   ],
   providers: [

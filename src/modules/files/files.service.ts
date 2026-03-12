@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   DeleteObjectCommand,
   PutObjectCommand,
@@ -28,8 +32,8 @@ export class FilesService {
     if (!file) {
       throw new NotFoundException('Файл не найден');
     }
-
-    const ext = file.mimetype.split('/')[1];
+    console.log('file', file);
+    const ext = file.originalname.split('.').pop();
     const fileName = `${randomBytes(16).toString('hex')}.${ext}`;
 
     const command = new PutObjectCommand({

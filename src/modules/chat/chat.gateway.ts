@@ -64,7 +64,7 @@ export class ChatGateway {
 
   @SubscribeMessage('sendMessage')
   async sendMessage(
-    @MessageBody() data: { chatId: string; text: string; files: Array<Express.Multer.File> },
+    @MessageBody() data: { chatId: string; text: string; files: Array<string> },
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     console.log('sendMessage');

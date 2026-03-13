@@ -75,14 +75,14 @@ export class AccountService {
     user: User,
     file: Express.Multer.File,
   ): Promise<{ url: string }> {
-    const { url } = await this.filesService.upload(file);
+    const { fileUrl } = await this.filesService.upload(file);
 
     await this.prismaService.user.update({
       where: { username: user.username },
-      data: { avatars: { push: url } },
+      data: { avatars: { push: fileUrl } },
     });
 
-    return { url };
+    return { url: fileUrl };
   }
 
   public async removeAvatar(user: User, index: number): Promise<boolean> {

@@ -73,6 +73,9 @@ model Attachment {
   messageId String
   message   Message @relation(fields: [messageId], references: [id])
   uuidURI   String
+  fileName  String
+  fileExt   String
+  fileSize  Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

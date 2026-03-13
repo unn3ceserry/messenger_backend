@@ -82,7 +82,7 @@ export class ChatService {
     chatId: string,
     senderId: string,
     text: string,
-    files?: Array<string>,
+    files?: Array<{ fileName: string; fileSize: number; fileUrl: string }>,
   ): Promise<Message> {
     await this.assertIsMember(chatId, senderId);
 
@@ -274,12 +274,19 @@ export class ChatService {
 
   private async attachFilesToMessage(
     messageId: string,
-    files: Array<string>,
+    files: Array<{ fileName: string; fileSize: number; fileUrl: string }>,
   ): Promise<void> {
     await Promise.all(
       files.map(async (file) => {
+        const fileExt = file.fileUrl.split('files/')[1].split('.')[1];
         await this.prismaService.attachment.create({
-          data: { messageId, uuidURI: file },
+          data: {
+            messageId,
+            uuidURI: file.fileUrl,
+            fileSize: file.fileSize,
+            fileExt,
+            fileName: file.fileName,
+          },
         });
       }),
     );

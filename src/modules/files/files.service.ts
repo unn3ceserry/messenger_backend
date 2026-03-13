@@ -35,6 +35,8 @@ export class FilesService {
     console.log('file', file);
     const ext = file.originalname.split('.').pop();
     const fileName = `${randomBytes(16).toString('hex')}.${ext}`;
+    const fileOriginalName = file.originalname;
+    const fileSize = file.size;
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -46,12 +48,12 @@ export class FilesService {
 
     await this.client.send(command);
 
-    const url = new URL(
+    const fileUrl = new URL(
       `files/${fileName}`,
       `${process.env.S3_ENDPOINT}/${this.bucket}/`,
     ).toString();
 
-    return { url, fileName };
+    return { fileUrl, fileName: fileOriginalName, fileSize };
   }
 
   public async delete(key: string) {

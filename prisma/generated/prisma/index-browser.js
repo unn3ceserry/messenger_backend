@@ -160,6 +160,9 @@ exports.Prisma.AttachmentScalarFieldEnum = {
   id: 'id',
   messageId: 'messageId',
   uuidURI: 'uuidURI',
+  fileName: 'fileName',
+  fileExt: 'fileExt',
+  fileSize: 'fileSize',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

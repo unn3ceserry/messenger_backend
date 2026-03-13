@@ -4011,14 +4011,27 @@ export namespace Prisma {
 
   export type AggregateAttachment = {
     _count: AttachmentCountAggregateOutputType | null
+    _avg: AttachmentAvgAggregateOutputType | null
+    _sum: AttachmentSumAggregateOutputType | null
     _min: AttachmentMinAggregateOutputType | null
     _max: AttachmentMaxAggregateOutputType | null
+  }
+
+  export type AttachmentAvgAggregateOutputType = {
+    fileSize: number | null
+  }
+
+  export type AttachmentSumAggregateOutputType = {
+    fileSize: number | null
   }
 
   export type AttachmentMinAggregateOutputType = {
     id: string | null
     messageId: string | null
     uuidURI: string | null
+    fileName: string | null
+    fileExt: string | null
+    fileSize: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4027,6 +4040,9 @@ export namespace Prisma {
     id: string | null
     messageId: string | null
     uuidURI: string | null
+    fileName: string | null
+    fileExt: string | null
+    fileSize: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4035,16 +4051,30 @@ export namespace Prisma {
     id: number
     messageId: number
     uuidURI: number
+    fileName: number
+    fileExt: number
+    fileSize: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
 
+  export type AttachmentAvgAggregateInputType = {
+    fileSize?: true
+  }
+
+  export type AttachmentSumAggregateInputType = {
+    fileSize?: true
+  }
+
   export type AttachmentMinAggregateInputType = {
     id?: true
     messageId?: true
     uuidURI?: true
+    fileName?: true
+    fileExt?: true
+    fileSize?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4053,6 +4083,9 @@ export namespace Prisma {
     id?: true
     messageId?: true
     uuidURI?: true
+    fileName?: true
+    fileExt?: true
+    fileSize?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4061,6 +4094,9 @@ export namespace Prisma {
     id?: true
     messageId?: true
     uuidURI?: true
+    fileName?: true
+    fileExt?: true
+    fileSize?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -4104,6 +4140,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: AttachmentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AttachmentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: AttachmentMinAggregateInputType
@@ -4134,6 +4182,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: AttachmentCountAggregateInputType | true
+    _avg?: AttachmentAvgAggregateInputType
+    _sum?: AttachmentSumAggregateInputType
     _min?: AttachmentMinAggregateInputType
     _max?: AttachmentMaxAggregateInputType
   }
@@ -4142,9 +4192,14 @@ export namespace Prisma {
     id: string
     messageId: string
     uuidURI: string
+    fileName: string
+    fileExt: string
+    fileSize: number
     createdAt: Date
     updatedAt: Date
     _count: AttachmentCountAggregateOutputType | null
+    _avg: AttachmentAvgAggregateOutputType | null
+    _sum: AttachmentSumAggregateOutputType | null
     _min: AttachmentMinAggregateOutputType | null
     _max: AttachmentMaxAggregateOutputType | null
   }
@@ -4167,6 +4222,9 @@ export namespace Prisma {
     id?: boolean
     messageId?: boolean
     uuidURI?: boolean
+    fileName?: boolean
+    fileExt?: boolean
+    fileSize?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     message?: boolean | MessageDefaultArgs<ExtArgs>
@@ -4176,6 +4234,9 @@ export namespace Prisma {
     id?: boolean
     messageId?: boolean
     uuidURI?: boolean
+    fileName?: boolean
+    fileExt?: boolean
+    fileSize?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     message?: boolean | MessageDefaultArgs<ExtArgs>
@@ -4185,6 +4246,9 @@ export namespace Prisma {
     id?: boolean
     messageId?: boolean
     uuidURI?: boolean
+    fileName?: boolean
+    fileExt?: boolean
+    fileSize?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     message?: boolean | MessageDefaultArgs<ExtArgs>
@@ -4194,11 +4258,14 @@ export namespace Prisma {
     id?: boolean
     messageId?: boolean
     uuidURI?: boolean
+    fileName?: boolean
+    fileExt?: boolean
+    fileSize?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type AttachmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "messageId" | "uuidURI" | "createdAt" | "updatedAt", ExtArgs["result"]["attachment"]>
+  export type AttachmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "messageId" | "uuidURI" | "fileName" | "fileExt" | "fileSize" | "createdAt" | "updatedAt", ExtArgs["result"]["attachment"]>
   export type AttachmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     message?: boolean | MessageDefaultArgs<ExtArgs>
   }
@@ -4218,6 +4285,9 @@ export namespace Prisma {
       id: string
       messageId: string
       uuidURI: string
+      fileName: string
+      fileExt: string
+      fileSize: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["attachment"]>
@@ -4647,6 +4717,9 @@ export namespace Prisma {
     readonly id: FieldRef<"Attachment", 'String'>
     readonly messageId: FieldRef<"Attachment", 'String'>
     readonly uuidURI: FieldRef<"Attachment", 'String'>
+    readonly fileName: FieldRef<"Attachment", 'String'>
+    readonly fileExt: FieldRef<"Attachment", 'String'>
+    readonly fileSize: FieldRef<"Attachment", 'Int'>
     readonly createdAt: FieldRef<"Attachment", 'DateTime'>
     readonly updatedAt: FieldRef<"Attachment", 'DateTime'>
   }
@@ -9404,6 +9477,9 @@ export namespace Prisma {
     id: 'id',
     messageId: 'messageId',
     uuidURI: 'uuidURI',
+    fileName: 'fileName',
+    fileExt: 'fileExt',
+    fileSize: 'fileSize',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -9549,6 +9625,20 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
   /**
    * Deep Input Types
@@ -9779,6 +9869,9 @@ export namespace Prisma {
     id?: StringFilter<"Attachment"> | string
     messageId?: StringFilter<"Attachment"> | string
     uuidURI?: StringFilter<"Attachment"> | string
+    fileName?: StringFilter<"Attachment"> | string
+    fileExt?: StringFilter<"Attachment"> | string
+    fileSize?: IntFilter<"Attachment"> | number
     createdAt?: DateTimeFilter<"Attachment"> | Date | string
     updatedAt?: DateTimeFilter<"Attachment"> | Date | string
     message?: XOR<MessageScalarRelationFilter, MessageWhereInput>
@@ -9788,6 +9881,9 @@ export namespace Prisma {
     id?: SortOrder
     messageId?: SortOrder
     uuidURI?: SortOrder
+    fileName?: SortOrder
+    fileExt?: SortOrder
+    fileSize?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     message?: MessageOrderByWithRelationInput
@@ -9800,6 +9896,9 @@ export namespace Prisma {
     NOT?: AttachmentWhereInput | AttachmentWhereInput[]
     messageId?: StringFilter<"Attachment"> | string
     uuidURI?: StringFilter<"Attachment"> | string
+    fileName?: StringFilter<"Attachment"> | string
+    fileExt?: StringFilter<"Attachment"> | string
+    fileSize?: IntFilter<"Attachment"> | number
     createdAt?: DateTimeFilter<"Attachment"> | Date | string
     updatedAt?: DateTimeFilter<"Attachment"> | Date | string
     message?: XOR<MessageScalarRelationFilter, MessageWhereInput>
@@ -9809,11 +9908,16 @@ export namespace Prisma {
     id?: SortOrder
     messageId?: SortOrder
     uuidURI?: SortOrder
+    fileName?: SortOrder
+    fileExt?: SortOrder
+    fileSize?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: AttachmentCountOrderByAggregateInput
+    _avg?: AttachmentAvgOrderByAggregateInput
     _max?: AttachmentMaxOrderByAggregateInput
     _min?: AttachmentMinOrderByAggregateInput
+    _sum?: AttachmentSumOrderByAggregateInput
   }
 
   export type AttachmentScalarWhereWithAggregatesInput = {
@@ -9823,6 +9927,9 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Attachment"> | string
     messageId?: StringWithAggregatesFilter<"Attachment"> | string
     uuidURI?: StringWithAggregatesFilter<"Attachment"> | string
+    fileName?: StringWithAggregatesFilter<"Attachment"> | string
+    fileExt?: StringWithAggregatesFilter<"Attachment"> | string
+    fileSize?: IntWithAggregatesFilter<"Attachment"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Attachment"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Attachment"> | Date | string
   }
@@ -10337,6 +10444,9 @@ export namespace Prisma {
   export type AttachmentCreateInput = {
     id?: string
     uuidURI: string
+    fileName: string
+    fileExt: string
+    fileSize: number
     createdAt?: Date | string
     updatedAt?: Date | string
     message: MessageCreateNestedOneWithoutAttachmentsInput
@@ -10346,6 +10456,9 @@ export namespace Prisma {
     id?: string
     messageId: string
     uuidURI: string
+    fileName: string
+    fileExt: string
+    fileSize: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -10353,6 +10466,9 @@ export namespace Prisma {
   export type AttachmentUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     uuidURI?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileExt?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     message?: MessageUpdateOneRequiredWithoutAttachmentsNestedInput
@@ -10362,6 +10478,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     messageId?: StringFieldUpdateOperationsInput | string
     uuidURI?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileExt?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10370,6 +10489,9 @@ export namespace Prisma {
     id?: string
     messageId: string
     uuidURI: string
+    fileName: string
+    fileExt: string
+    fileSize: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -10377,6 +10499,9 @@ export namespace Prisma {
   export type AttachmentUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     uuidURI?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileExt?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10385,6 +10510,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     messageId?: StringFieldUpdateOperationsInput | string
     uuidURI?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileExt?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10963,6 +11091,17 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type MessageScalarRelationFilter = {
     is?: MessageWhereInput
     isNot?: MessageWhereInput
@@ -10972,14 +11111,24 @@ export namespace Prisma {
     id?: SortOrder
     messageId?: SortOrder
     uuidURI?: SortOrder
+    fileName?: SortOrder
+    fileExt?: SortOrder
+    fileSize?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type AttachmentAvgOrderByAggregateInput = {
+    fileSize?: SortOrder
   }
 
   export type AttachmentMaxOrderByAggregateInput = {
     id?: SortOrder
     messageId?: SortOrder
     uuidURI?: SortOrder
+    fileName?: SortOrder
+    fileExt?: SortOrder
+    fileSize?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -10988,8 +11137,31 @@ export namespace Prisma {
     id?: SortOrder
     messageId?: SortOrder
     uuidURI?: SortOrder
+    fileName?: SortOrder
+    fileExt?: SortOrder
+    fileSize?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type AttachmentSumOrderByAggregateInput = {
+    fileSize?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type ChatMemberCountOrderByAggregateInput = {
@@ -11347,6 +11519,14 @@ export namespace Prisma {
     connect?: MessageWhereUniqueInput
   }
 
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type MessageUpdateOneRequiredWithoutAttachmentsNestedInput = {
     create?: XOR<MessageCreateWithoutAttachmentsInput, MessageUncheckedCreateWithoutAttachmentsInput>
     connectOrCreate?: MessageCreateOrConnectWithoutAttachmentsInput
@@ -11645,6 +11825,33 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
   export type UserContactsCreateWithoutUserInput = {
     id?: string
     usernameContact: string
@@ -11827,6 +12034,9 @@ export namespace Prisma {
   export type AttachmentCreateWithoutMessageInput = {
     id?: string
     uuidURI: string
+    fileName: string
+    fileExt: string
+    fileSize: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -11834,6 +12044,9 @@ export namespace Prisma {
   export type AttachmentUncheckedCreateWithoutMessageInput = {
     id?: string
     uuidURI: string
+    fileName: string
+    fileExt: string
+    fileSize: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -11949,6 +12162,9 @@ export namespace Prisma {
     id?: StringFilter<"Attachment"> | string
     messageId?: StringFilter<"Attachment"> | string
     uuidURI?: StringFilter<"Attachment"> | string
+    fileName?: StringFilter<"Attachment"> | string
+    fileExt?: StringFilter<"Attachment"> | string
+    fileSize?: IntFilter<"Attachment"> | number
     createdAt?: DateTimeFilter<"Attachment"> | Date | string
     updatedAt?: DateTimeFilter<"Attachment"> | Date | string
   }
@@ -12604,6 +12820,9 @@ export namespace Prisma {
   export type AttachmentCreateManyMessageInput = {
     id?: string
     uuidURI: string
+    fileName: string
+    fileExt: string
+    fileSize: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -12611,6 +12830,9 @@ export namespace Prisma {
   export type AttachmentUpdateWithoutMessageInput = {
     id?: StringFieldUpdateOperationsInput | string
     uuidURI?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileExt?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12618,6 +12840,9 @@ export namespace Prisma {
   export type AttachmentUncheckedUpdateWithoutMessageInput = {
     id?: StringFieldUpdateOperationsInput | string
     uuidURI?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileExt?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12625,6 +12850,9 @@ export namespace Prisma {
   export type AttachmentUncheckedUpdateManyWithoutMessageInput = {
     id?: StringFieldUpdateOperationsInput | string
     uuidURI?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileExt?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

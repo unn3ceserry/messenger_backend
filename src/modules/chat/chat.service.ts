@@ -88,14 +88,22 @@ export class ChatService {
 
     const message = await this.prismaService.message.create({
       data: { chatId, senderId, text },
-      include: { sender: true },
     });
 
     if (files?.length) {
       await this.attachFilesToMessage(message.id, files);
     }
 
-    return message;
+    const fullMessage = await this.prismaService.message.findUnique({
+      where: { id: message.id },
+      include: { sender: true, attachments: true },
+    });
+
+    if (!fullMessage) {
+      throw new Error('Message not found after creation');
+    }
+
+    return fullMessage;
   }
 
   public async deleteMessage(
@@ -121,7 +129,8 @@ export class ChatService {
 
     return this.prismaService.message.update({
       where: { id: messageId },
-      data: { text: newText, editedAt: new Date() },
+      include: { attachments: true},
+      data: { text: newText, editedAt: new Date(), },
     });
   }
 
